@@ -96,11 +96,16 @@ try {
                 logging: true
             ))
             ->withInstructions('这是一个模板信息查询服务器，专门为小智AI语音助手设计。当用户询问"关于模板的信息"时，可以调用相关工具查询模板数据。')
-            ->withTool(
-                [\app\common\service\TemplateService::class, 'queryTemplateInfo'],
-                'query_template_info',
-                '查询模板相关信息，支持关键词搜索'
-            )
+//            ->withTool(
+//                [\app\common\service\TemplateService::class, 'queryTemplateInfo'],
+//                'query_template_info',
+//                '查询模板相关信息，支持关键词搜索'
+//            )
+             ->withTool(
+                 [\app\common\service\TemplateService::class, 'queryTemplateInfo'],
+                 'query_template_info',
+                 '查询模板相关信息，支持关键词搜索'
+             )
             ->withTool(
                 [\app\common\service\TemplateService::class, 'getTemplateCategories'],
                 'get_template_categories',
@@ -118,46 +123,52 @@ try {
         $logger->info("✅ 工具注册完成: {$device['name']} (3个工具)");
 
         // 使用定时器延迟启动每个设备，避免同时连接
-        $delay = array_search($deviceId, array_keys($enabledDevices)) * 10; // 每个设备延迟10秒启动
+        $delay = array_search($deviceId, array_keys($enabledDevices)) * 2; // 每个设备延迟10秒启动
         
-        $loop->addTimer($delay, function() use ($serverInstance, $logger, $deviceId, $device, $deviceManager, $delay) {
-            try {
-                $logger->info("🔌 启动设备连接: {$device['name']} (延迟{$delay}秒)");
-                
-                // 创建WSS传输层
-                $transport = new McpWssTransport(
-                    $device['wss_url'], 
-                    $deviceManager, 
-                    $deviceId, 
-                    $device['name']
-                );
-                $transport->setLogger($logger);
+         $loop->addTimer($delay, function() use ($serverInstance, $logger, $deviceId, $device, $deviceManager, $delay) {
+             try {
+                 $logger->info("🔌 启动设备连接: {$device['name']} (延迟{$delay}秒)");
+                 
+                 // 创建WSS传输层
+                 $transport = new McpWssTransport(
+                     $device['wss_url'], 
+                     $deviceManager, 
+                     $deviceId, 
+                     $device['name']
+                 );
+                 $transport->setLogger($logger);
 
-                // 添加事件监听
-                $transport->on('ready', function () use ($logger, $device) {
-                    $logger->info("🟢 设备就绪: {$device['name']} (依赖小智AI心跳)");
-                });
+                 // 存储transport实例到全局变量，供TemplateService使用
+                 $GLOBALS['mcp_transport_' . $deviceId] = $transport;
+                 
+                 // 存储设备配置信息，但不设置当前调用设备（避免多设备冲突）
+                 $GLOBALS['mcp_device_config_' . $deviceId] = $device;
 
-                $transport->on('client_connected', function ($sessionId) use ($logger, $device) {
-                    $logger->info("🔗 设备已连接: {$device['name']}");
-                });
+                 // 添加事件监听
+                 $transport->on('ready', function () use ($logger, $device) {
+                     $logger->info("🟢 设备就绪: {$device['name']} (依赖小智AI心跳)");
+                 });
 
-                $transport->on('client_disconnected', function ($sessionId, $reason) use ($logger, $device) {
-                    $logger->info("🔴 设备断开: {$device['name']} - {$reason}");
-                });
+                 $transport->on('client_connected', function ($sessionId) use ($logger, $device) {
+                     $logger->info("🔗 设备已连接: {$device['name']}");
+                 });
 
-                $transport->on('error', function ($error) use ($logger, $device) {
-                    $logger->error("❌ 设备错误: {$device['name']} - {$error->getMessage()}");
-                });
-                
-                // 启动服务器监听
-                $serverInstance->listen($transport);
-                
-                $logger->info("🎯 设备监听启动: {$device['name']}");
-            } catch (\Throwable $e) {
-                $logger->error("💥 启动失败: {$device['name']} - {$e->getMessage()}");
-            }
-        });
+                 $transport->on('client_disconnected', function ($sessionId, $reason) use ($logger, $device) {
+                     $logger->info("🔴 设备断开: {$device['name']} - {$reason}");
+                 });
+
+                 $transport->on('error', function ($error) use ($logger, $device) {
+                     $logger->error("❌ 设备错误: {$device['name']} - {$error->getMessage()}");
+                 });
+                 
+                 // 启动服务器监听
+                 $serverInstance->listen($transport);
+                 
+                 $logger->info("🎯 设备监听启动: {$device['name']}");
+             } catch (\Throwable $e) {
+                 $logger->error("💥 启动失败: {$device['name']} - {$e->getMessage()}");
+             }
+         });
 
         $serverInstances[] = $serverInstance;
     }

@@ -30,8 +30,100 @@ class TemplateService
     {
         Log::info('queryTemplateInfo：'.'keyword='.$keyword.' params='.json_encode($params));
 
-        //获取容器中的设备信息 在mcp_server.php 84行 设置的设备
-        
+        //获取当前查询的设备信息数据 比如 设备ID 注意：是查询当前的设备信息数据 因为这个是共用的 我需要获取的是当前设备
+        try {
+            // 方法1：通过分析调用栈获取当前调用的设备信息
+            $callingDeviceId = null;
+            $callingDeviceInfo = null;
+            
+            // 获取调用栈，包含对象信息
+            $backtrace = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT, 15);
+            
+            // 查找调用栈中的McpWssTransport实例
+            foreach ($backtrace as $trace) {
+                if (isset($trace['object']) && $trace['object'] instanceof \app\admin\controller\McpWssTransport) {
+                    $transport = $trace['object'];
+                    $callingDeviceId = $transport->getDeviceId();
+                    $callingDeviceInfo = $GLOBALS['mcp_device_config_' . $callingDeviceId] ?? null;
+                    
+                    Log::info('通过调用栈找到设备：'.json_encode([
+                        'deviceId' => $callingDeviceId,
+                        'deviceName' => $transport->getDeviceName(),
+                        'traceFile' => basename($trace['file'] ?? 'unknown'),
+                        'traceLine' => $trace['line'] ?? 0,
+                        'traceFunction' => $trace['function'] ?? 'unknown'
+                    ]));
+                    break;
+                }
+            }
+            
+            // 如果通过调用栈没找到，使用备选方案
+            if (!$callingDeviceId) {
+                Log::info('调用栈未找到设备，使用备选方案');
+                
+                // 方法2：通过遍历所有transport实例，找到最近活跃的
+                $allTransports = [];
+                $activeTransports = [];
+                
+                foreach ($GLOBALS as $key => $value) {
+                    if (str_starts_with($key, 'mcp_transport_') && is_object($value)) {
+                        $deviceId = $value->getDeviceId();
+                        $deviceConfig = $GLOBALS['mcp_device_config_' . $deviceId] ?? null;
+                        
+                        $transportInfo = [
+                            'key' => $key,
+                            'deviceId' => $deviceId,
+                            'deviceName' => $value->getDeviceName(),
+                            'isConnected' => method_exists($value, 'isConnected') ? $value->isConnected() : 'unknown',
+                            'hasConfig' => $deviceConfig !== null
+                        ];
+                        
+                        $allTransports[] = $transportInfo;
+                        
+                        // 如果transport是连接的，认为是活跃的
+                        if ($transportInfo['isConnected'] === true) {
+                            $activeTransports[] = $transportInfo;
+                        }
+                    }
+                }
+                
+                Log::info('所有可用的transport实例：'.json_encode($allTransports));
+                Log::info('活跃的transport实例：'.json_encode($activeTransports));
+                
+                // 如果有活跃的transport，使用第一个作为当前设备
+                if (!empty($activeTransports)) {
+                    $callingDeviceId = $activeTransports[0]['deviceId'];
+                    $callingDeviceInfo = $GLOBALS['mcp_device_config_' . $callingDeviceId] ?? null;
+                }
+            }
+            
+            if ($callingDeviceId && $callingDeviceInfo) {
+                $data = [
+                    'deviceId' => $callingDeviceId,
+                    'deviceName' => $callingDeviceInfo['name'] ?? 'unknown',
+                    'wssUrl' => $callingDeviceInfo['wss_url'] ?? 'unknown',
+                    'enabled' => $callingDeviceInfo['enabled'] ?? false,
+                    'method' => $callingDeviceId ? 'backtrace_detection' : 'active_transport_detection'
+                ];
+                Log::info('当前调用设备信息：'.json_encode($data));
+                
+                // 构建设备上下文信息
+                $deviceContext = [
+                    'callingDeviceId' => $callingDeviceId,
+                    'callingDeviceName' => $callingDeviceInfo['name'] ?? 'unknown',
+                    'callingDeviceUrl' => $callingDeviceInfo['wss_url'] ?? 'unknown',
+                    'sessionId' => 'wss-session-' . $callingDeviceId . '-' . substr(md5($callingDeviceInfo['wss_url'] ?? ''), 0, 8)
+                ];
+                
+                Log::info('设备上下文信息：'.json_encode($deviceContext));
+                
+            } else {
+                Log::warning('未找到任何设备信息');
+            }
+            
+        } catch (\Exception $e) {
+            Log::error('获取设备信息失败：' . $e->getMessage());
+        }
 
 
 

@@ -12,7 +12,7 @@ return [
         'device_001' => [
             'id' => 'device_001',
             'name' => '测试设备',
-            'wss_url' => 'wss://api.xiaozhi.me/mcp/?token=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjM4OTQxMCwiYWdlbnRJZCI6NjM5MjM4LCJlbmRwb2ludElkIjoiYWdlbnRfNjM5MjM4IiwicHVycG9zZSI6Im1jcC1lbmRwb2ludCIsImlhdCI6MTc1NzAwNTcxNn0.7MyWiZDCqQkGUv-D5oGX4C6A_I_RgZKwGWmZYX5kAPgMmfGVzuaCm8Gq7XLN5C0fKuC1eA_0C-lQxWQtOHyz2A',
+            'wss_url' => 'wss://api.xiaozhi.me/mcp/?token=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjM4OTQxMCwiYWdlbnRJZCI6NjQ0OTIyLCJlbmRwb2ludElkIjoiYWdlbnRfNjQ0OTIyIiwicHVycG9zZSI6Im1jcC1lbmRwb2ludCIsImlhdCI6MTc1NzE0Mzg1M30.nA_F6aBNZUU2wYWFvF09d9kDCnHYVrOOKIp-6elNWpq4qLXkbAj5IzSdQht4LvaF-oCig1SAGA1euk_u5qzaMg',
             'enabled' => true,
             'metadata' => [
                 'location' => '办公室',
@@ -25,8 +25,8 @@ return [
         'device_002' => [
             'id' => 'device_002',
             'name' => '宏山社区儿童活动空间设备',
-            'wss_url' => 'wss://api.xiaozhi.me/mcp/?token=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjM4OTQxMCwiYWdlbnRJZCI6NjI4NDk1LCJlbmRwb2ludElkIjoiYWdlbnRfNjI4NDk1IiwicHVycG9zZSI6Im1jcC1lbmRwb2ludCIsImlhdCI6MTc1NzAwMTUxN30.w8C264vZ65LQaG4fapFGg-IT4ZpCIPTbKbqE1a30VN00I-uITOgmsAOEFPp2ZIDfkSxdudgpTXpZBpUtd7N30A',
-            'enabled' => true, // 暂时禁用，需要配置真实token
+            'wss_url' => 'wss://api.xiaozhi.me/mcp/?token=eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjM4OTQxMCwiYWdlbnRJZCI6NjM5MjM4LCJlbmRwb2ludElkIjoiYWdlbnRfNjM5MjM4IiwicHVycG9zZSI6Im1jcC1lbmRwb2ludCIsImlhdCI6MTc1NzE0MzgwMX0.L0tX7UMml1ZBSx4HrM5K9vKSGiHtDTNeBsCDg8NePFxSbwf8jvCcpJHPmSbwltEJ8vxdrzjgISDaAV4XzSG_Og',
+            'enabled' => true, //
             'metadata' => [
                 'location' => '会议室',
                 'type' => 'secondary',
