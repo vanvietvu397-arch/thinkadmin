@@ -3,25 +3,38 @@
 namespace app\common\service;
 
 use PhpMcp\Server\Attributes\McpTool;
+use think\facade\Log;
+use Psr\Log\LoggerInterface;
+use app\admin\controller\DeviceManager;
 
 /**
- * 模板信息查询服务
+ * 模板信息查询服务 
  * 当小智AI语音中提到"关于模板的信息"时，调用此服务查询模板信息
  */
 class TemplateService
 {
+
+
     /**
      * 查询模板信息
      *
      * @param string $keyword 搜索关键词（可选）
+     * @param array $params 设备参数（必选）
      * @return array 模板信息列表
      */
     #[McpTool(
         name: "query_template_info",
         description: "查询模板相关信息，支持关键词搜索"
     )]
-    public static function queryTemplateInfo(string $keyword = ''): array
+    public static function queryTemplateInfo(string $keyword = '',array $params = []): array
     {
+        Log::info('queryTemplateInfo：'.'keyword='.$keyword.' params='.json_encode($params));
+
+        //获取容器中的设备信息 在mcp_server.php 84行 设置的设备
+        
+
+
+
         // 这里可以连接数据库查询模板信息
         // 示例数据，实际使用时替换为数据库查询
         $templates = [
@@ -46,6 +59,14 @@ class TemplateService
                 'name' => '密码重置模板',
                 'description' => '用户忘记密码时重置密码的邮件模板',
                 'category' => '邮件模板',
+                'status' => '启用',
+                'create_time' => '2024-01-17 09:15:00'
+            ],
+            [
+                'id' => 4,
+                'name' => '社区党员信息',
+                'description' => '社区党员信息的展示模板',
+                'category' => '展示模板',
                 'status' => '启用',
                 'create_time' => '2024-01-17 09:15:00'
             ]
@@ -83,8 +104,7 @@ class TemplateService
         $categories = [
             '邮件模板' => 2,
             '短信模板' => 1,
-            '推送模板' => 0,
-            '站内信模板' => 0
+            '展示模板' => 1,
         ];
 
         return [

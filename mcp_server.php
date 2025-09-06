@@ -15,6 +15,19 @@ declare(strict_types=1);
 chdir(__DIR__);
 require_once __DIR__ . '/vendor/autoload.php';
 
+// 设置必要的环境变量和常量，避免ThinkAdmin扩展中的错误
+//if (!defined('ROOT_PATH')) {
+//    define('ROOT_PATH', __DIR__ . '/');
+//}
+//if (!defined('APP_PATH')) {
+//    define('APP_PATH', __DIR__ . '/app/');
+//}
+//if (!defined('RUNTIME_PATH')) {
+//    define('RUNTIME_PATH', __DIR__ . '/runtime/');
+//}
+
+use think\App;
+use think\admin\Library;
 use PhpMcp\Schema\ServerCapabilities;
 use PhpMcp\Server\Defaults\BasicContainer;
 use PhpMcp\Server\Server;
@@ -22,6 +35,15 @@ use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
 use app\admin\controller\McpWssTransport;
 use app\admin\controller\DeviceManager;
+
+// 创建应用实例，传入根目录路径
+$app = new App(__DIR__);
+
+// 在初始化之前设置Library的静态App实例，避免syspath()函数报错
+Library::$sapp = $app;
+
+// 现在初始化应用
+$app->initialize();
 
 class StderrLogger extends AbstractLogger
 {
