@@ -28,11 +28,11 @@ class TemplateService
     )]
     public static function queryTemplateInfo(string $keyword = '',array $params = []): array
     {
-        Log::info('queryTemplateInfo：'.'keyword='.$keyword.' params='.json_encode($params));
+        Log::info('queryTemplateInfo：'.'keyword='.$keyword);
 
-        //获取当前查询的设备信息数据 比如 设备ID 注意：是查询当前的设备信息数据 因为这个是共用的 我需要获取的是当前设备
+        
         try {
-            // 方法1：通过分析调用栈获取当前调用的设备信息
+            //通过分析调用栈获取当前调用的设备信息
             $callingDeviceId = null;
             $callingDeviceInfo = null;
             
@@ -56,47 +56,7 @@ class TemplateService
                     break;
                 }
             }
-            
-            // 如果通过调用栈没找到，使用备选方案
-            if (!$callingDeviceId) {
-                Log::info('调用栈未找到设备，使用备选方案');
-                
-                // 方法2：通过遍历所有transport实例，找到最近活跃的
-                $allTransports = [];
-                $activeTransports = [];
-                
-                foreach ($GLOBALS as $key => $value) {
-                    if (str_starts_with($key, 'mcp_transport_') && is_object($value)) {
-                        $deviceId = $value->getDeviceId();
-                        $deviceConfig = $GLOBALS['mcp_device_config_' . $deviceId] ?? null;
-                        
-                        $transportInfo = [
-                            'key' => $key,
-                            'deviceId' => $deviceId,
-                            'deviceName' => $value->getDeviceName(),
-                            'isConnected' => method_exists($value, 'isConnected') ? $value->isConnected() : 'unknown',
-                            'hasConfig' => $deviceConfig !== null
-                        ];
-                        
-                        $allTransports[] = $transportInfo;
-                        
-                        // 如果transport是连接的，认为是活跃的
-                        if ($transportInfo['isConnected'] === true) {
-                            $activeTransports[] = $transportInfo;
-                        }
-                    }
-                }
-                
-                Log::info('所有可用的transport实例：'.json_encode($allTransports));
-                Log::info('活跃的transport实例：'.json_encode($activeTransports));
-                
-                // 如果有活跃的transport，使用第一个作为当前设备
-                if (!empty($activeTransports)) {
-                    $callingDeviceId = $activeTransports[0]['deviceId'];
-                    $callingDeviceInfo = $GLOBALS['mcp_device_config_' . $callingDeviceId] ?? null;
-                }
-            }
-            
+
             if ($callingDeviceId && $callingDeviceInfo) {
                 $data = [
                     'deviceId' => $callingDeviceId,

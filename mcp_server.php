@@ -96,11 +96,6 @@ try {
                 logging: true
             ))
             ->withInstructions('这是一个模板信息查询服务器，专门为小智AI语音助手设计。当用户询问"关于模板的信息"时，可以调用相关工具查询模板数据。')
-//            ->withTool(
-//                [\app\common\service\TemplateService::class, 'queryTemplateInfo'],
-//                'query_template_info',
-//                '查询模板相关信息，支持关键词搜索'
-//            )
              ->withTool(
                  [\app\common\service\TemplateService::class, 'queryTemplateInfo'],
                  'query_template_info',
