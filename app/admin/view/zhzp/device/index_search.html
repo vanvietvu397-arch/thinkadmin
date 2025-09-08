@@ -1,0 +1,102 @@
+<form class="layui-form layui-form-pane form-search" action="{:sysuri()}" onsubmit="return false" method="get" autocomplete="off">
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">设备名称</label>
+        <div class="layui-input-inline">
+            <input name="device_name" value="{$get.device_name|default=''}" placeholder="请输入设备名称" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">设备编号</label>
+        <div class="layui-input-inline">
+            <input name="device_number" value="{$get.device_number|default=''}" placeholder="请输入设备编号" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">设备分类</label>
+        <div class="layui-input-inline">
+            <select class="layui-select" name="classify_id">
+                <option value=''>-- 全部 --</option>
+                {foreach $classifies as $classify}
+                {if isset($get.classify_id) and $get.classify_id eq $classify.id}
+                <option selected value="{$classify.id}">{$classify.classify_name}</option>
+                {else}
+                <option value="{$classify.id}">{$classify.classify_name}</option>
+                {/if}{/foreach}
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">设备分组</label>
+        <div class="layui-input-inline">
+            <select class="layui-select" name="group_id">
+                <option value=''>-- 全部 --</option>
+                {foreach $groups as $group}
+                {if isset($get.group_id) and $get.group_id eq $group.id}
+                <option selected value="{$group.id}">{$group.group_name}</option>
+                {else}
+                <option value="{$group.id}">{$group.group_name}</option>
+                {/if}{/foreach}
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">设备规格</label>
+        <div class="layui-input-inline">
+            <select class="layui-select" name="spec">
+                <option value=''>-- 全部 --</option>
+                {foreach [1=>'横屏',2=>'竖屏'] as $k=>$v}
+                {if isset($get.spec) and $get.spec eq $k.""}
+                <option selected value="{$k}">{$v}</option>
+                {else}
+                <option value="{$k}">{$v}</option>
+                {/if}{/foreach}
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">设备状态</label>
+        <div class="layui-input-inline">
+            <select class="layui-select" name="status">
+                <option value=''>-- 全部 --</option>
+                {foreach [0=>'已禁用',1=>'已启用'] as $k=>$v}
+                {if isset($get.status) and $get.status eq $k.""}
+                <option selected value="{$k}">{$v}</option>
+                {else}
+                <option value="{$k}">{$v}</option>
+                {/if}{/foreach}
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">小智AI状态</label>
+        <div class="layui-input-inline">
+            <select class="layui-select" name="xiaozhi_status">
+                <option value=''>-- 全部 --</option>
+                {foreach ['disconnected'=>'未连接','connected'=>'已连接','error'=>'连接错误'] as $k=>$v}
+                {if isset($get.xiaozhi_status) and $get.xiaozhi_status eq $k}
+                <option selected value="{$k}">{$v}</option>
+                {else}
+                <option value="{$k}">{$v}</option>
+                {/if}{/foreach}
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">创建时间</label>
+        <div class="layui-input-inline">
+            <input data-date-range name="create_time" value="{$get.create_time|default=''}" placeholder="请选择创建时间" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <button class="layui-btn layui-btn-primary"><i class="layui-icon">&#xe615;</i> 搜 索</button>
+    </div>
+</form>

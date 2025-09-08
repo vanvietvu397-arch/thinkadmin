@@ -33,17 +33,53 @@ return [
             // 服务器端口
             'hostport'        => env('DB_MYSQL_PORT', '3306'),
             // 数据库名
-            'database'        => env('DB_MYSQL_DATABASE', 'thinkadmin'),
+            'database'        => env('DB_MYSQL_DATABASE', 'mcp_admin'),
             // 用户名
             'username'        => env('DB_MYSQL_USERNAME', 'root'),
             // 密码
-            'password'        => env('DB_MYSQL_PASSWORD', ''),
+            'password'        => env('DB_MYSQL_PASSWORD', 'root'),
             // 数据库连接参数
             'params'          => [],
             // 数据库表前缀
             'prefix'          => env('DB_MYSQL_PREFIX', ''),
             // 数据库编码默认采用 utf8mb4
             'charset'         => env('DB_MYSQL_CHARSET', 'utf8mb4'),
+            // 数据库部署方式:0 集中式(单一服务器),1 分布式(主从服务器)
+            'deploy'          => 0,
+            // 数据库读写是否分离 主从式有效
+            'rw_separate'     => false,
+            // 读写分离后 主服务器数量
+            'master_num'      => 1,
+            // 指定从服务器序号
+            'slave_no'        => '',
+            // 检查字段是否存在
+            'fields_strict'   => true,
+            // 是否需要断线重连
+            'break_reconnect' => false,
+            // 监听SQL执行日志
+            'trigger_sql'     => true,
+            // 开启字段类型缓存
+            'fields_cache'    => isOnline(),
+        ],
+        'mysql2' => [
+            // 数据库类型
+            'type'            => 'mysql',
+            // 服务器地址
+            'hostname'        => env('DB_MYSQL2_HOST', '127.0.0.1'),
+            // 服务器端口
+            'hostport'        => env('DB_MYSQL2_PORT', '3306'),
+            // 数据库名
+            'database'        => env('DB_MYSQL2_DATABASE', 'qhzhzp_ybnetwork'),
+            // 用户名
+            'username'        => env('DB_MYSQL2_USERNAME', 'root'),
+            // 密码
+            'password'        => env('DB_MYSQL2_PASSWORD', 'root'),
+            // 数据库连接参数
+            'params'          => [],
+            // 数据库表前缀
+            'prefix'          => env('DB_MYSQL2_PREFIX', 'jjjshop_'),
+            // 数据库编码默认采用 utf8mb4
+            'charset'         => env('DB_MYSQL2_CHARSET', 'utf8mb4'),
             // 数据库部署方式:0 集中式(单一服务器),1 分布式(主从服务器)
             'deploy'          => 0,
             // 数据库读写是否分离 主从式有效

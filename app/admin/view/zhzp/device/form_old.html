@@ -1,0 +1,158 @@
+<style>
+/* 弹窗样式调整 */
+.layui-layer {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin-top: 0 !important;
+}
+
+/* 限制弹窗最大高度 */
+.layui-layer-content {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* 表单容器样式 */
+.device-form-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+</style>
+
+<form action="{:sysuri()}" method="post" data-auto="true" class="layui-form layui-card device-form-container" data-table-id="DeviceTable">
+
+    <div class="layui-card-body padding-left-40">
+
+        <label class="layui-form-item relative block">
+            <span class="help-label"><b>设备名称</b>Device Name</span>
+            <input maxlength="255" class="layui-input" name="device_name" value='{$vo.device_name|default=""}' required vali-name="设备名称" placeholder="请输入设备名称">
+            <span class="help-block">请输入设备名称，请尽量保持名称的唯一性 ~</span>
+        </label>
+
+        <label class="layui-form-item relative block">
+            <span class="help-label"><b>设备编号</b>Device Number</span>
+            {if isset($vo.device_number)}
+            <input readonly maxlength="255" class="layui-input think-bg-gray" name="device_number" value='{$vo.device_number|default=""}' required placeholder="请输入设备编号">
+            {else}
+            <input maxlength="255" class="layui-input" name="device_number" value='{$vo.device_number|default=""}' required vali-name="设备编号" placeholder="请输入设备编号">
+            {/if}
+            <span class="help-block">请输入设备编号，设备创建后不能再次修改，设备编号不能出现重复 ~</span>
+        </label>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>设备分类</b>Device Classify</div>
+            <select class="layui-select" name="classify_id" required vali-name="设备分类">
+                <option value="">请选择设备分类</option>
+                {foreach $classifies as $classify}
+                {if isset($vo.classify_id) and $vo.classify_id eq $classify.id}
+                <option selected value="{$classify.id}">{$classify.classify_name}</option>
+                {else}
+                <option value="{$classify.id}">{$classify.classify_name}</option>
+                {/if}{/foreach}
+            </select>
+            <p class="help-block">请选择设备分类，用于设备分类管理 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>设备分组</b>Device Group</div>
+            <select class="layui-select" name="group_id" required vali-name="设备分组">
+                <option value="">请选择设备分组</option>
+                {foreach $groups as $group}
+                {if isset($vo.group_id) and $vo.group_id eq $group.id}
+                <option selected value="{$group.id}">{$group.group_name}</option>
+                {else}
+                <option value="{$group.id}">{$group.group_name}</option>
+                {/if}{/foreach}
+            </select>
+            <p class="help-block">请选择设备分组，用于设备分组管理 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>设备规格</b>Device Spec</div>
+            <div class="">
+                <input type="radio" name="spec" value="1" title="横屏" {if !isset($vo.spec) or $vo.spec eq 1}checked{/if}>
+                <input type="radio" name="spec" value="2" title="竖屏" {if isset($vo.spec) and $vo.spec eq 2}checked{/if}>
+            </div>
+            <p class="help-block">请选择设备规格，横屏或竖屏显示 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>设备状态</b>Device Status</div>
+            <div class="">
+                <input type="radio" name="status" value="1" title="启用" {if !isset($vo.status) or $vo.status eq 1}checked{/if}>
+                <input type="radio" name="status" value="0" title="禁用" {if isset($vo.status) and $vo.status eq 0}checked{/if}>
+            </div>
+            <p class="help-block">请选择设备状态，启用或禁用设备 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>启用小智AI</b>Enable Xiaozhi AI</div>
+            <div class="">
+                <input type="checkbox" name="enable_xiaozhi" value="1" title="启用小智AI" {if isset($vo.enable_xiaozhi) and $vo.enable_xiaozhi eq 1}checked{/if}>
+            </div>
+            <p class="help-block">是否启用小智AI功能 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev" id="xiaozhi-config" style="display: none;">
+            <div class="help-label"><b>小智MCP地址</b>Xiaozhi MCP URL</div>
+            <textarea name="xiaozhi_mcp_url" class="layui-textarea" placeholder="请输入小智MCP连接地址" rows="3">{$vo.xiaozhi_mcp_url|default=''}</textarea>
+            <p class="help-block">请输入小智AI的MCP连接地址 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>设备指令</b>Device Instructions</div>
+            <div class="" style="max-height: 200px; overflow-y: auto; border: 1px solid #e6e6e6; padding: 10px; border-radius: 4px;">
+                {foreach $instructs as $instruct}
+                <input type="checkbox" name="instruct_ids[]" value="{$instruct.id}" title="{$instruct.instruct_name} ({$instruct.instruct_code})" 
+                       {if isset($deviceInstructs) and in_array($instruct.id, $deviceInstructs)}checked{/if}>
+                {/foreach}
+            </div>
+            <p class="help-block">请选择设备支持的指令，可多选 ~</p>
+        </div>
+
+        <label class="layui-form-item relative block">
+            <span class="help-label"><b>供应商ID</b>Supplier ID</span>
+            <input name="shop_supplier_id" value="{$vo.shop_supplier_id|default='1'}" placeholder="请输入供应商ID" class="layui-input" required vali-name="供应商ID" lay-verify="number">
+            <span class="help-block">请输入供应商ID，默认为1 ~</span>
+        </label>
+
+        <label class="layui-form-item relative block">
+            <span class="help-label"><b>应用ID</b>App ID</span>
+            <input name="app_id" value="{$vo.app_id|default='10001'}" placeholder="请输入应用ID" class="layui-input" required vali-name="应用ID" lay-verify="number">
+            <span class="help-block">请输入应用ID，默认为10001 ~</span>
+        </label>
+
+    </div>
+
+    <div class="hr-line-dashed"></div>
+    {notempty name='vo.id'}<input type='hidden' value='{$vo.id}' name='id'>{/notempty}
+
+    <div class="layui-form-item text-center">
+        <button class="layui-btn" type='submit'>保存数据</button>
+        <button class="layui-btn layui-btn-danger" type='button' data-confirm="确定要取消编辑吗？" data-close>取消编辑</button>
+    </div>
+
+</form>
+
+<script>
+layui.use(['form'], function () {
+    var form = layui.form;
+    
+    // 监听小智AI开关
+    form.on('checkbox', function(data) {
+        if (data.elem.name === 'enable_xiaozhi') {
+            if (data.elem.checked) {
+                $('#xiaozhi-config').show();
+            } else {
+                $('#xiaozhi-config').hide();
+            }
+        }
+    });
+    
+    // 初始化小智AI配置显示状态
+    if ($('input[name="enable_xiaozhi"]').is(':checked')) {
+        $('#xiaozhi-config').show();
+    }
+});
+</script>
