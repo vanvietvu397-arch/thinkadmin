@@ -1,0 +1,120 @@
+{extend name='table'}
+
+{block name="button"}
+<!--{if auth("add")}-->
+<button data-table-id="DeviceGroupTable" data-modal='{:url("add")}?type={$type|default=""}' class='layui-btn layui-btn-sm layui-btn-primary'>添加分组</button>
+<!--{/if}-->
+
+<!--{if auth("remove")}-->
+<button data-table-id="DeviceGroupTable" data-action='{:url("remove")}' data-rule="id#{id}" data-confirm="确定要批量删除分组吗？" class='layui-btn layui-btn-sm layui-btn-primary'>批量删除</button>
+<!--{/if}-->
+
+{/block}
+
+{block name="content"}
+<div class="layui-tab layui-tab-card">
+    <ul class="layui-tab-title">
+        {foreach ['index'=>'分组列表','recycle'=>'回 收 站'] as $k=>$v}{if isset($type) and $type eq $k}
+        <li class="layui-this" data-open="{:sysuri()}?type={$k}">{$v}</li>
+        {else}
+        <li data-open="{:sysuri()}?type={$k}">{$v}</li>
+        {/if}{/foreach}
+    </ul>
+    <div class="layui-tab-content">
+        {include file='zhzp/device_group/index_search'}
+        <table id="DeviceGroupTable" data-url="{:request()->url()}" data-target-search="form.form-search"></table>
+    </div>
+</div>
+{/block}
+
+{block name='script'}
+<script>
+    $(function () {
+        // 初始化表格组件
+        $('#DeviceGroupTable').layTable({
+            even: true, height: 'full',
+            sort: {field: 'id', type: 'desc'},
+            where: {type: '{$type|default="index"}'},
+            cols: [[
+                {checkbox: true, fixed: true},
+                {field: 'id', title: 'ID', width: 80, align: 'center', sort: true},
+                {field: 'group_name', title: '分组名称', minWidth: 140, align: 'center'},
+                {field: 'group_desc', title: '分组描述', minWidth: 200, align: 'center', templet: '#GroupDescTpl'},
+                {field: 'app_id', title: '所属应用', width: 120, align: 'center', templet: '#AppTpl'},
+                {field: 'shop_supplier_id', title: '所属供应商', width: 120, align: 'center', templet: '#SupplierTpl'},
+                {field: 'device_count', title: '设备数量', width: 100, align: 'center', templet: '#DeviceCountTpl'},
+                {field: 'status', title: '分组状态', minWidth: 110, align: 'center', templet: '#StatusSwitchTpl'},
+                {field: 'create_time', title: '创建时间', minWidth: 170, align: 'center', sort: true},
+                {toolbar: '#toolbar', align: 'center', minWidth: 200, title: '数据操作', fixed: 'right'},
+            ]]
+        });
+
+        // 数据状态切换操作
+        layui.form.on('switch(StatusSwitch)', function (obj) {
+            var data = {id: obj.value, status: obj.elem.checked > 0 ? 1 : 0};
+            $.form.load("{:url('state')}", data, 'post', function (ret) {
+                if (ret.code < 1) $.msg.error(ret.info, 3, function () {
+                    $('#DeviceGroupTable').trigger('reload');
+                });
+                return false;
+            }, false);
+        });
+    });
+</script>
+
+<!-- 分组描述模板 -->
+<script type="text/html" id="GroupDescTpl">
+    {{# if(d.group_desc) { }}
+    {{ d.group_desc }}
+    {{# } else { }}
+    -
+    {{# } }}
+</script>
+
+<!-- 应用模板 -->
+<script type="text/html" id="AppTpl">
+    {{# if(d.app && d.app.app_name) { }}
+    <span class="layui-badge layui-bg-blue">{{ d.app.app_name }}</span>
+    {{# } else { }}
+    -
+    {{# } }}
+</script>
+
+<!-- 供应商模板 -->
+<script type="text/html" id="SupplierTpl">
+    {{# if(d.supplier && d.supplier.name) { }}
+    <span class="layui-badge layui-bg-orange">{{ d.supplier.name }}</span>
+    {{# } else { }}
+    -
+    {{# } }}
+</script>
+
+<!-- 设备数量模板 -->
+<script type="text/html" id="DeviceCountTpl">
+    <span class="layui-badge layui-bg-cyan">{{ d.device_count || 0 }} 台</span>
+</script>
+
+<!-- 分组状态切换模板 -->
+<script type="text/html" id="StatusSwitchTpl">
+    <!--{if auth("state")}-->
+    <input type="checkbox" value="{{d.id}}" lay-skin="switch" lay-text="已启用|已禁用" lay-filter="StatusSwitch" {{-d.status>0?'checked':''}}>
+    <!--{else}-->
+    {{-d.status ? '<b class="color-green">已启用</b>' : '<b class="color-red">已禁用</b>'}}
+    <!--{/if}-->
+</script>
+
+<!-- 数据操作工具条模板 -->
+<script type="text/html" id="toolbar">
+    <!--{if auth('edit')}-->
+    <a class="layui-btn layui-btn-primary layui-btn-sm" data-event-dbclick data-title="编辑分组" data-modal='{:url("edit")}?id={{d.id}}'>编 辑</a>
+    <!--{/if}-->
+
+    <!--{if auth('detail')}-->
+    <a class="layui-btn layui-btn-normal layui-btn-sm" data-event-dbclick data-title="分组详情" data-modal='{:url("detail")}?id={{d.id}}'>详 情</a>
+    <!--{/if}-->
+
+    <!--{if auth("remove")}-->
+    <a class="layui-btn layui-btn-danger layui-btn-sm" data-confirm="确定要删除分组吗?" data-action="{:url('remove')}" data-value="id#{{d.id}}">删 除</a>
+    <!--{/if}-->
+</script>
+{/block}

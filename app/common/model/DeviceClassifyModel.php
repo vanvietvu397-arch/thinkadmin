@@ -3,19 +3,18 @@
 namespace app\common\model;
 
 use think\admin\Model;
-
 /**
- * 设备分组模型
- * Class DeviceGroup
+ * 设备分类模型
+ * Class DeviceClassifyModel
  * @package app\common\model
  */
-class DeviceGroup extends Model
+class DeviceClassifyModel extends Model
 {
     // 指定数据库连接
     protected $connection = 'mysql2';
     
     // 指定表名
-    protected $table = 'jjjshop_device_group';
+    protected $table = 'jjjshop_device_classify';
     
     // 指定主键
     protected $pk = 'id';
@@ -32,22 +31,38 @@ class DeviceGroup extends Model
         'id' => 'integer',
         'shop_supplier_id' => 'integer',
         'status' => 'integer',
-        'is_delete' => 'integer',
         'app_id' => 'integer',
+        'is_delete' => 'integer',
         'create_time' => 'integer',
         'update_time' => 'integer',
     ];
+    
+    /**
+     * 关联应用
+     */
+    public function app()
+    {
+        return $this->belongsTo(AppModel::class, 'app_id', 'app_id');
+    }
+    
+    /**
+     * 关联供应商
+     */
+    public function supplier()
+    {
+        return $this->belongsTo(SupplierModel::class, 'shop_supplier_id', 'shop_supplier_id');
+    }
     
     /**
      * 关联设备（一对多）
      */
     public function devices()
     {
-        return $this->hasMany(Devices::class, 'group_id', 'id');
+        return $this->hasMany(DeviceModel::class, 'classify_id', 'id');
     }
     
     /**
-     * 获取分组下的设备数量
+     * 获取分类下的设备数量
      */
     public function getDeviceCountAttr($value, $data)
     {
@@ -55,7 +70,7 @@ class DeviceGroup extends Model
     }
     
     /**
-     * 获取启用的分组列表
+     * 获取启用的分类列表
      */
     public static function getEnabledList($shopSupplierId = null)
     {
@@ -69,7 +84,7 @@ class DeviceGroup extends Model
     }
     
     /**
-     * 获取分组选项（用于下拉选择）
+     * 获取分类选项（用于下拉选择）
      */
     public static function getOptions($shopSupplierId = null)
     {
@@ -79,7 +94,7 @@ class DeviceGroup extends Model
         foreach ($list as $item) {
             $options[] = [
                 'value' => $item['id'],
-                'label' => $item['group_name']
+                'label' => $item['classify_name']
             ];
         }
         

@@ -9,7 +9,7 @@ use think\admin\Model;
  * Class Device
  * @package app\common\model
  */
-class Devices extends Model
+class DeviceModel extends Model
 {
     // 指定数据库连接
     protected $connection = 'mysql2';
@@ -59,7 +59,7 @@ class Devices extends Model
      */
     public function app()
     {
-        return $this->belongsTo(App::class, 'app_id', 'app_id');
+        return $this->belongsTo(AppModel::class, 'app_id', 'app_id');
     }
     
     /**
@@ -67,7 +67,7 @@ class Devices extends Model
      */
     public function supplier()
     {
-        return $this->belongsTo(Supplier::class, 'shop_supplier_id', 'shop_supplier_id');
+        return $this->belongsTo(SupplierModel::class, 'shop_supplier_id', 'shop_supplier_id');
     }
     
     /**
@@ -75,7 +75,7 @@ class Devices extends Model
      */
     public function classify()
     {
-        return $this->belongsTo(DeviceClassify::class, 'classify_id', 'id');
+        return $this->belongsTo(DeviceClassifyModel::class, 'classify_id', 'id');
     }
     
     /**
@@ -83,7 +83,7 @@ class Devices extends Model
      */
     public function group()
     {
-        return $this->belongsTo(DeviceGroup::class, 'group_id', 'id');
+        return $this->belongsTo(DeviceGroupModel::class, 'group_id', 'id');
     }
     
     /**
@@ -91,7 +91,7 @@ class Devices extends Model
      */
     public function instructs()
     {
-        return $this->belongsToMany(DeviceInstruct::class, DeviceInstructMiddle::class, 'instruct_id', 'device_id');
+        return $this->belongsToMany(DeviceInstructModel::class, DeviceInstructMiddle::class, 'instruct_id', 'device_id');
     }
     
     /**
@@ -99,7 +99,7 @@ class Devices extends Model
      */
     public function logs()
     {
-        return $this->hasMany(DeviceLog::class, 'device_id', 'id');
+        return $this->hasMany(DeviceLogModel::class, 'device_id', 'id');
     }
     
     /**

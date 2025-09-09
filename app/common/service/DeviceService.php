@@ -2,13 +2,13 @@
 
 namespace app\common\service;
 
-use app\common\model\Devices;
-use app\common\model\DeviceClassify;
-use app\common\model\DeviceGroup;
-use app\common\model\DeviceInstruct;
+use app\common\model\DeviceModel;
+use app\common\model\DeviceClassifyModel;
+use app\common\model\DeviceGroupModel;
+use app\common\model\DeviceInstructModel;
 use app\common\model\DeviceInstructMiddle;
-use app\common\model\DeviceLog;
-use app\common\model\DevicePush;
+use app\common\model\DeviceLogModel;
+use app\common\model\DevicePushModel;
 
 /**
  * 设备服务类
@@ -23,9 +23,9 @@ class DeviceService
     public static function getDeviceStats($shopSupplierId = null)
     {
         return [
-            'total' => Devices::getTotalCount($shopSupplierId),
-            'online' => Devices::getOnlineCount($shopSupplierId),
-            'offline' => Devices::getTotalCount($shopSupplierId) - Devices::getOnlineCount($shopSupplierId),
+            'total' => DeviceModel::getTotalCount($shopSupplierId),
+            'online' => DeviceModel::getOnlineCount($shopSupplierId),
+            'offline' => DeviceModel::getTotalCount($shopSupplierId) - DeviceModel::getOnlineCount($shopSupplierId),
         ];
     }
     
@@ -34,7 +34,7 @@ class DeviceService
      */
     public static function getDeviceList($shopSupplierId = null, $params = [])
     {
-        $query = Devices::with(['classify', 'group', 'instructs'])
+        $query = DeviceModel::with(['classify', 'group', 'instructs'])
                       ->where('is_delete', 0);
         
         if ($shopSupplierId) {
@@ -69,7 +69,7 @@ class DeviceService
      */
     public static function createDevice($data)
     {
-        return Devices::create($data);
+        return DeviceModel::create($data);
     }
     
     /**
@@ -77,7 +77,7 @@ class DeviceService
      */
     public static function updateDevice($id, $data)
     {
-        $device = Devices::find($id);
+        $device = DeviceModel::find($id);
         if (!$device) {
             return false;
         }
@@ -90,7 +90,7 @@ class DeviceService
      */
     public static function deleteDevice($id)
     {
-        $device = Devices::find($id);
+        $device = DeviceModel::find($id);
         if (!$device) {
             return false;
         }
@@ -120,13 +120,13 @@ class DeviceService
     public static function sendDeviceInstruct($deviceId, $instructId, $shopSupplierId, $appId)
     {
         // 获取指令信息
-        $instruct = DeviceInstruct::find($instructId);
+        $instruct = DeviceInstructModel::find($instructId);
         if (!$instruct) {
             return false;
         }
         
         // 记录日志
-        $log = DeviceLog::recordLog($deviceId, $instructId, $instruct->instruct_code, $shopSupplierId, $appId);
+        $log = DeviceLogModel::recordLog($deviceId, $instructId, $instruct->instruct_code, $shopSupplierId, $appId);
         
         // 这里可以添加实际的指令发送逻辑
         // 比如通过 WebSocket 或 HTTP 请求发送到设备
@@ -139,7 +139,7 @@ class DeviceService
      */
     public static function getDeviceLogs($deviceId, $limit = 20)
     {
-        return DeviceLog::getRecentLogs($deviceId, $limit);
+        return DeviceLogModel::getRecentLogs($deviceId, $limit);
     }
     
     /**
@@ -147,7 +147,7 @@ class DeviceService
      */
     public static function getDeviceExecutedStats($deviceId, $startTime = null, $endTime = null)
     {
-        return DeviceLog::getDeviceExecutedStats($deviceId, $startTime, $endTime);
+        return DeviceLogModel::getDeviceExecutedStats($deviceId, $startTime, $endTime);
     }
     
     /**
@@ -155,7 +155,7 @@ class DeviceService
      */
     public static function getClassifyOptions($shopSupplierId = null)
     {
-        return DeviceClassify::getOptions($shopSupplierId);
+        return DeviceClassifyModel::getOptions($shopSupplierId);
     }
     
     /**
@@ -163,7 +163,7 @@ class DeviceService
      */
     public static function getGroupOptions($shopSupplierId = null)
     {
-        return DeviceGroup::getOptions($shopSupplierId);
+        return DeviceGroupModel::getOptions($shopSupplierId);
     }
     
     /**
@@ -171,7 +171,7 @@ class DeviceService
      */
     public static function getInstructOptions($shopSupplierId = null)
     {
-        return DeviceInstruct::getOptions($shopSupplierId);
+        return DeviceInstructModel::getOptions($shopSupplierId);
     }
     
     /**
@@ -179,7 +179,7 @@ class DeviceService
      */
     public static function createPush($data)
     {
-        return DevicePush::createPush($data);
+        return DevicePushModel::createPush($data);
     }
     
     /**
@@ -187,7 +187,7 @@ class DeviceService
      */
     public static function getPushList($shopSupplierId = null, $status = null)
     {
-        return DevicePush::getList($shopSupplierId, $status);
+        return DevicePushModel::getList($shopSupplierId, $status);
     }
     
     /**
@@ -195,6 +195,6 @@ class DeviceService
      */
     public static function getPushStats($shopSupplierId = null)
     {
-        return DevicePush::getStats($shopSupplierId);
+        return DevicePushModel::getStats($shopSupplierId);
     }
 }

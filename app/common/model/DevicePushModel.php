@@ -6,10 +6,10 @@ use think\admin\Model;
 
 /**
  * 设备推送模型
- * Class DevicePush
+ * Class DevicePushModel
  * @package app\common\model
  */
-class DevicePush extends Model
+class DevicePushModel extends Model
 {
     // 指定数据库连接
     protected $connection = 'mysql2';
@@ -44,6 +44,22 @@ class DevicePush extends Model
     // 推送类型常量
     const PUSH_TYPE_DEVICE = 1; // 推送设备
     const PUSH_TYPE_GROUP = 2;  // 推送分组
+    
+    /**
+     * 关联应用
+     */
+    public function app()
+    {
+        return $this->belongsTo(AppModel::class, 'app_id', 'app_id');
+    }
+    
+    /**
+     * 关联供应商
+     */
+    public function supplier()
+    {
+        return $this->belongsTo(SupplierModel::class, 'shop_supplier_id', 'shop_supplier_id');
+    }
     
     /**
      * 获取推送类型文本

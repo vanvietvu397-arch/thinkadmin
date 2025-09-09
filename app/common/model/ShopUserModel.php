@@ -6,10 +6,10 @@ use think\admin\Model;
 
 /**
  * 商家用户模型
- * Class ShopUser
+ * Class ShopUserModel
  * @package app\common\model
  */
-class ShopUser extends Model
+class ShopUserModel extends Model
 {
     // 指定数据库连接
     protected $connection = 'mysql2';
@@ -51,7 +51,7 @@ class ShopUser extends Model
      */
     public function app()
     {
-        return $this->belongsTo(App::class, 'app_id', 'app_id');
+        return $this->belongsTo(AppModel::class, 'app_id', 'app_id');
     }
     
     /**

@@ -39,7 +39,7 @@
             cols: [[
                 {checkbox: true, fixed: true},
                 {field: 'id', title: 'ID', width: 80, align: 'center', sort: true},
-                {field: 'device_name', title: '设备名称', minWidth: 140, align: 'left'},
+                {field: 'device_name', title: '设备名称', minWidth: 140, align: 'center'},
                 {field: 'device_number', title: '设备编号', width: 120, align: 'center'},
                 {field: 'classify_id', title: '设备分类', width: 100, align: 'center', templet: '#ClassifyTpl'},
                 {field: 'group_id', title: '设备分组', width: 100, align: 'center', templet: '#GroupTpl'},
@@ -70,7 +70,7 @@
     {{# if(d.classify && d.classify.classify_name) { }}
     <span class="layui-badge layui-bg-blue">{{ d.classify.classify_name }}</span>
     {{# } else { }}
-    <span class="layui-badge layui-bg-gray">未分类</span>
+    -
     {{# } }}
 </script>
 
@@ -79,7 +79,7 @@
     {{# if(d.group && d.group.group_name) { }}
     <span class="layui-badge layui-bg-green">{{ d.group.group_name }}</span>
     {{# } else { }}
-    <span class="layui-badge layui-bg-gray">未分组</span>
+    -
     {{# } }}
 </script>
 

@@ -1,0 +1,123 @@
+<style>
+/* 弹窗样式调整 */
+.layui-layer {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin-top: 0 !important;
+}
+
+/* 限制弹窗最大高度 */
+.layui-layer-content {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* 表单容器样式 */
+.instruct-form-container {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+</style>
+
+<form action="{:sysuri()}" method="post" data-auto="true" class="layui-form layui-card instruct-form-container" data-table-id="DeviceInstructTable">
+
+    <div class="layui-card-body padding-left-40">
+
+        <label class="layui-form-item relative block">
+            <span class="help-label"><b>指令名称</b>Instruct Name</span>
+            <input maxlength="100" class="layui-input" name="instruct_name" value='{$vo.instruct_name|default=""}' required vali-name="指令名称" placeholder="请输入指令名称">
+            <span class="help-block">请输入指令名称，请尽量保持名称的唯一性 ~</span>
+        </label>
+
+        <label class="layui-form-item relative block">
+            <span class="help-label"><b>指令编码</b>Instruct Code</span>
+            <input maxlength="50" class="layui-input" name="instruct_code" value='{$vo.instruct_code|default=""}' required vali-name="指令编码" placeholder="请输入指令编码">
+            <span class="help-block">请输入指令编码，用于设备识别和执行 ~</span>
+        </label>
+
+        <label class="layui-form-item relative block">
+            <span class="help-label"><b>指令描述</b>Instruct Description</span>
+            <textarea name="instruct_desc" class="layui-textarea" placeholder="请输入指令描述" rows="3">{$vo.instruct_desc|default=''}</textarea>
+            <span class="help-block">请输入指令描述，用于说明指令的用途和功能 ~</span>
+        </label>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>应用</b>Application</div>
+            <select class="layui-select" name="app_id" lay-filter="appSelect" required vali-name="应用">
+                <option value="">请选择应用</option>
+                {foreach $apps as $app}
+                {if isset($vo.app_id) and $vo.app_id eq $app.app_id}
+                <option selected value="{$app.app_id}">{$app.app_name}</option>
+                {else}
+                <option value="{$app.app_id}">{$app.app_name}</option>
+                {/if}{/foreach}
+            </select>
+            <p class="help-block">请选择应用，用于指令归属管理 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>供应商</b>Supplier</div>
+            <select class="layui-select" name="shop_supplier_id" lay-filter="supplierSelect" required vali-name="供应商">
+                <option value="">请先选择应用</option>
+                {if isset($vo.shop_supplier_id)}
+                {foreach $suppliers as $supplier}
+                {if $vo.shop_supplier_id eq $supplier.shop_supplier_id}
+                <option selected value="{$supplier.shop_supplier_id}">{$supplier.name}</option>
+                {/if}
+                {/foreach}
+                {/if}
+            </select>
+            <p class="help-block">请选择供应商，用于指令归属管理 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>指令状态</b>Instruct Status</div>
+            <div class="">
+                <input type="radio" name="status" value="1" title="启用" {if !isset($vo.status) or $vo.status eq 1}checked{/if}>
+                <input type="radio" name="status" value="0" title="禁用" {if isset($vo.status) and $vo.status eq 0}checked{/if}>
+            </div>
+            <p class="help-block">请选择指令状态，启用或禁用指令 ~</p>
+        </div>
+
+    </div>
+
+    <div class="hr-line-dashed"></div>
+    {notempty name='vo.id'}<input type='hidden' value='{$vo.id}' name='id'>{/notempty}
+
+    <div class="layui-form-item text-center">
+        <button class="layui-btn" type='submit'>保存数据</button>
+        <button class="layui-btn layui-btn-danger" type='button' data-confirm="确定要取消编辑吗？" data-close>取消编辑</button>
+    </div>
+
+</form>
+
+<script>
+layui.use(['form'], function(){
+    var form = layui.form;
+    
+    // 应用选择联动
+    form.on('select(appSelect)', function(data) {
+        var appId = data.value;
+        var supplierSelect = $('select[name="shop_supplier_id"]');
+        
+        // 清空下级选择
+        supplierSelect.html('<option value="">请先选择应用</option>');
+        form.render('select');
+        
+        if (appId) {
+            // 加载供应商
+            $.get('{:url("getSuppliers")}', {app_id: appId}, function(res) {
+                if (res.code === 1) {
+                    var options = '<option value="">请选择供应商</option>';
+                    $.each(res.data, function(index, item) {
+                        options += '<option value="' + item.shop_supplier_id + '">' + item.name + '</option>';
+                    });
+                    supplierSelect.html(options);
+                    form.render('select');
+                }
+            });
+        }
+    });
+});
+</script>

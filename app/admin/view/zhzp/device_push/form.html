@@ -1,0 +1,182 @@
+<style>
+/* 弹窗样式调整 */
+.layui-layer {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin-top: 0 !important;
+}
+
+/* 限制弹窗最大高度 */
+.layui-layer-content {
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+/* 表单容器样式 */
+.push-form-container {
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+</style>
+
+<form action="{:sysuri()}" method="post" data-auto="true" class="layui-form layui-card push-form-container" data-table-id="DevicePushTable">
+
+    <div class="layui-card-body padding-left-40">
+
+        <label class="layui-form-item relative block">
+            <span class="help-label"><b>推送标题</b>Push Title</span>
+            <input maxlength="100" class="layui-input" name="push_title" value='{$vo.push_title|default=""}' required vali-name="推送标题" placeholder="请输入推送标题">
+            <span class="help-block">请输入推送标题，用于标识推送内容 ~</span>
+        </label>
+
+        <label class="layui-form-item relative block">
+            <span class="help-label"><b>推送内容</b>Push Content</span>
+            <textarea name="push_content" class="layui-textarea" placeholder="请输入推送内容" rows="4" required vali-name="推送内容">{$vo.push_content|default=''}</textarea>
+            <span class="help-block">请输入推送内容，支持文本格式 ~</span>
+        </label>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>推送类型</b>Push Type</div>
+            <div class="">
+                <input type="radio" name="push_type" value="1" title="推送设备" {if !isset($vo.push_type) or $vo.push_type eq 1}checked{/if}>
+                <input type="radio" name="push_type" value="2" title="推送分组" {if isset($vo.push_type) and $vo.push_type eq 2}checked{/if}>
+            </div>
+            <p class="help-block">请选择推送类型，推送设备或推送分组 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>推送设备</b>Push Devices</div>
+            <div class="layui-input-block">
+                <select name="push_device[]" lay-filter="deviceSelect" multiple lay-search>
+                    {foreach $devices as $device}
+                    {if isset($vo.push_device_array) and in_array($device.id, $vo.push_device_array)}
+                    <option selected value="{$device.id}">{$device.device_name} ({$device.device_number})</option>
+                    {else}
+                    <option value="{$device.id}">{$device.device_name} ({$device.device_number})</option>
+                    {/if}
+                    {/foreach}
+                </select>
+            </div>
+            <p class="help-block">请选择要推送的设备，可多选 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>应用</b>Application</div>
+            <select class="layui-select" name="app_id" lay-filter="appSelect" required vali-name="应用">
+                <option value="">请选择应用</option>
+                {foreach $apps as $app}
+                {if isset($vo.app_id) and $vo.app_id eq $app.app_id}
+                <option selected value="{$app.app_id}">{$app.app_name}</option>
+                {else}
+                <option value="{$app.app_id}">{$app.app_name}</option>
+                {/if}{/foreach}
+            </select>
+            <p class="help-block">请选择应用，用于推送归属管理 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>供应商</b>Supplier</div>
+            <select class="layui-select" name="shop_supplier_id" lay-filter="supplierSelect" required vali-name="供应商">
+                <option value="">请先选择应用</option>
+                {if isset($vo.shop_supplier_id)}
+                {foreach $suppliers as $supplier}
+                {if $vo.shop_supplier_id eq $supplier.shop_supplier_id}
+                <option selected value="{$supplier.shop_supplier_id}">{$supplier.name}</option>
+                {/if}
+                {/foreach}
+                {/if}
+            </select>
+            <p class="help-block">请选择供应商，用于推送归属管理 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>推送开始时间</b>Push Start Time</div>
+            <input type="text" name="push_start_time" value="{$vo.push_start_time|default=''}" placeholder="请选择推送开始时间" class="layui-input" id="push_start_time" required vali-name="推送开始时间">
+            <p class="help-block">请选择推送开始时间 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>推送结束时间</b>Push End Time</div>
+            <input type="text" name="push_end_time" value="{$vo.push_end_time|default=''}" placeholder="请选择推送结束时间" class="layui-input" id="push_end_time" required vali-name="推送结束时间">
+            <p class="help-block">请选择推送结束时间 ~</p>
+        </div>
+
+        <div class="layui-form-item label-required-prev">
+            <div class="help-label"><b>推送状态</b>Push Status</div>
+            <div class="">
+                <input type="radio" name="push_status" value="1" title="启用" {if !isset($vo.push_status) or $vo.push_status eq 1}checked{/if}>
+                <input type="radio" name="push_status" value="0" title="禁用" {if isset($vo.push_status) and $vo.push_status eq 0}checked{/if}>
+            </div>
+            <p class="help-block">请选择推送状态，启用或禁用推送 ~</p>
+        </div>
+
+    </div>
+
+    <div class="hr-line-dashed"></div>
+    {notempty name='vo.id'}<input type='hidden' value='{$vo.id}' name='id'>{/notempty}
+
+    <div class="layui-form-item text-center">
+        <button class="layui-btn" type='submit'>保存数据</button>
+        <button class="layui-btn layui-btn-danger" type='button' data-confirm="确定要取消编辑吗？" data-close>取消编辑</button>
+    </div>
+
+</form>
+
+<script>
+layui.use(['form', 'laydate'], function(){
+    var form = layui.form;
+    var laydate = layui.laydate;
+    
+    // 初始化日期时间选择器
+    laydate.render({
+        elem: '#push_start_time',
+        type: 'datetime',
+        format: 'yyyy-MM-dd HH:mm:ss'
+    });
+    
+    laydate.render({
+        elem: '#push_end_time',
+        type: 'datetime',
+        format: 'yyyy-MM-dd HH:mm:ss'
+    });
+    
+    // 应用选择联动
+    form.on('select(appSelect)', function(data) {
+        var appId = data.value;
+        var supplierSelect = $('select[name="shop_supplier_id"]');
+        
+        // 清空下级选择
+        supplierSelect.html('<option value="">请先选择应用</option>');
+        form.render('select');
+        
+        if (appId) {
+            // 加载供应商
+            $.get('{:url("getSuppliers")}', {app_id: appId}, function(res) {
+                if (res.code === 1) {
+                    var options = '<option value="">请选择供应商</option>';
+                    $.each(res.data, function(index, item) {
+                        options += '<option value="' + item.shop_supplier_id + '">' + item.name + '</option>';
+                    });
+                    supplierSelect.html(options);
+                    form.render('select');
+                }
+            });
+        }
+    });
+    
+    // 推送类型切换
+    form.on('radio(push_type)', function(data) {
+        var pushType = data.value;
+        var deviceSelect = $('select[name="push_device[]"]');
+        
+        if (pushType == 1) {
+            // 推送设备
+            deviceSelect.show();
+        } else if (pushType == 2) {
+            // 推送分组
+            deviceSelect.hide();
+        }
+    });
+});
+</script>

@@ -1,0 +1,72 @@
+<form class="layui-form layui-form-pane form-search" action="{:sysuri()}" onsubmit="return false" method="get" autocomplete="off">
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">分组名称</label>
+        <div class="layui-input-inline">
+            <input name="group_name" value="{$get.group_name|default=''}" placeholder="请输入分组名称" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">分组描述</label>
+        <div class="layui-input-inline">
+            <input name="group_desc" value="{$get.group_desc|default=''}" placeholder="请输入分组描述" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">所属应用</label>
+        <div class="layui-input-inline">
+            <select class="layui-select" name="app_id">
+                <option value=''>-- 全部 --</option>
+                {foreach $apps as $app}
+                {if isset($get.app_id) and $get.app_id eq $app.app_id}
+                <option selected value="{$app.app_id}">{$app.app_name}</option>
+                {else}
+                <option value="{$app.app_id}">{$app.app_name}</option>
+                {/if}{/foreach}
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">所属供应商</label>
+        <div class="layui-input-inline">
+            <select class="layui-select" name="shop_supplier_id">
+                <option value=''>-- 全部 --</option>
+                {foreach $suppliers as $supplier}
+                {if isset($get.shop_supplier_id) and $get.shop_supplier_id eq $supplier.shop_supplier_id}
+                <option selected value="{$supplier.shop_supplier_id}">{$supplier.name}</option>
+                {else}
+                <option value="{$supplier.shop_supplier_id}">{$supplier.name}</option>
+                {/if}{/foreach}
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">分组状态</label>
+        <div class="layui-input-inline">
+            <select class="layui-select" name="status">
+                <option value=''>-- 全部 --</option>
+                {foreach [0=>'已禁用',1=>'已启用'] as $k=>$v}
+                {if isset($get.status) and $get.status eq $k.""}
+                <option selected value="{$k}">{$v}</option>
+                {else}
+                <option value="{$k}">{$v}</option>
+                {/if}{/foreach}
+            </select>
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">创建时间</label>
+        <div class="layui-input-inline">
+            <input data-date-range name="create_time" value="{$get.create_time|default=''}" placeholder="请选择创建时间" class="layui-input">
+        </div>
+    </div>
+
+    <div class="layui-form-item layui-inline">
+        <button class="layui-btn layui-btn-primary"><i class="layui-icon">&#xe615;</i> 搜 索</button>
+    </div>
+</form>

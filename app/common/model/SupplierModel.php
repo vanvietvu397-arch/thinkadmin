@@ -6,10 +6,10 @@ use think\admin\Model;
 
 /**
  * 供应商模型
- * Class Supplier
+ * Class SupplierModel
  * @package app\common\model
  */
-class Supplier extends Model
+class SupplierModel extends Model
 {
     // 指定数据库连接
     protected $connection = 'mysql2';
@@ -78,7 +78,7 @@ class Supplier extends Model
      */
     public function app()
     {
-        return $this->belongsTo(App::class, 'app_id', 'app_id');
+        return $this->belongsTo(AppModel::class, 'app_id', 'app_id');
     }
     
     /**
@@ -86,7 +86,7 @@ class Supplier extends Model
      */
     public function supplierUsers()
     {
-        return $this->hasMany(SupplierUser::class, 'shop_supplier_id', 'shop_supplier_id');
+        return $this->hasMany(SupplierUserModel::class, 'shop_supplier_id', 'shop_supplier_id');
     }
     
     /**
@@ -94,7 +94,7 @@ class Supplier extends Model
      */
     public function devices()
     {
-        return $this->hasMany(Devices::class, 'shop_supplier_id', 'shop_supplier_id');
+        return $this->hasMany(DeviceModel::class, 'shop_supplier_id', 'shop_supplier_id');
     }
     
     /**

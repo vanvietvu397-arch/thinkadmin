@@ -18,14 +18,14 @@ namespace app\admin\controller\zhzp;
 
 use think\admin\Controller;
 use think\admin\helper\QueryHelper;
-use app\common\model\Devices;
-use app\common\model\DeviceClassify;
-use app\common\model\DeviceGroup;
-use app\common\model\DeviceInstruct;
+use app\common\model\DeviceModel;
+use app\common\model\DeviceClassifyModel;
+use app\common\model\DeviceGroupModel;
+use app\common\model\DeviceInstructModel;
 use app\common\model\DeviceInstructMiddle;
-use app\common\model\App;
-use app\common\model\ShopUser;
-use app\common\model\Supplier;
+use app\common\model\AppModel;
+use app\common\model\ShopUserModel;
+use app\common\model\SupplierModel;
 use app\common\service\DeviceService;
 
 /**
@@ -46,10 +46,10 @@ class Device extends Controller
     public function index()
     {
         $this->type = $this->get['type'] ?? 'index';
-        Devices::mQuery()->layTable(function () {
+        DeviceModel::mQuery()->layTable(function () {
             $this->title = '设备管理';
-            $this->classifies = DeviceClassify::getEnabledList();
-            $this->groups = DeviceGroup::getEnabledList();
+            $this->classifies = DeviceClassifyModel::getEnabledList();
+            $this->groups = DeviceGroupModel::getEnabledList();
         }, function (QueryHelper $query) {
             // 加载对应数据列表
             if ($this->type === 'index') {
@@ -75,7 +75,7 @@ class Device extends Controller
      */
     public function add()
     {
-        Devices::mForm('form');
+        DeviceModel::mForm('form');
     }
 
     /**
@@ -85,7 +85,7 @@ class Device extends Controller
      */
     public function edit()
     {
-        Devices::mForm('form');
+        DeviceModel::mForm('form');
     }
 
     /**
@@ -97,12 +97,12 @@ class Device extends Controller
     {
         if ($this->request->isGet()) {
             // 获取应用数据
-            $this->apps = App::getEnabledList();
+            $this->apps = AppModel::getEnabledList();
             
             // 获取分类、分组和指令数据
-            $this->classifies = DeviceClassify::getEnabledList();
-            $this->groups = DeviceGroup::getEnabledList();
-            $this->instructs = DeviceInstruct::getEnabledList();
+            $this->classifies = DeviceClassifyModel::getEnabledList();
+            $this->groups = DeviceGroupModel::getEnabledList();
+            $this->instructs = DeviceInstructModel::getEnabledList();
             
             // 如果是编辑，获取设备已关联的指令和相关数据
             if (isset($data['id']) && $data['id']) {
@@ -111,7 +111,7 @@ class Device extends Controller
                 
                 // 获取供应商数据
                 if (!empty($data['app_id'])) {
-                    $this->suppliers = Supplier::getSupplierList($data['app_id']);
+                    $this->suppliers = SupplierModel::getSupplierList($data['app_id']);
                 }
             }
         }
@@ -130,7 +130,7 @@ class Device extends Controller
             if (!empty($data['id'])) {
                 $where[] = ['id', '<>', $data['id']];
             }
-            if (Devices::where($where)->find()) {
+            if (DeviceModel::where($where)->find()) {
                 $this->error('设备编号已存在');
             }
             
@@ -192,7 +192,7 @@ class Device extends Controller
         $ids = is_array($ids) ? $ids : explode(',', $ids);
         
         // 执行软删除，将 is_delete 设置为 1
-        $result = Devices::whereIn('id', $ids)->update(['is_delete' => 1]);
+        $result = DeviceModel::whereIn('id', $ids)->update(['is_delete' => 1]);
         
         if ($result) {
             $this->success('设备删除成功');
@@ -208,7 +208,7 @@ class Device extends Controller
      */
     public function forbid()
     {
-        Devices::mSave();
+        DeviceModel::mSave();
     }
 
     /**
@@ -218,7 +218,7 @@ class Device extends Controller
      */
     public function resume()
     {
-        Devices::mSave();
+        DeviceModel::mSave();
     }
 
     /**
@@ -228,7 +228,7 @@ class Device extends Controller
      */
     public function state()
     {
-        Devices::mSave();
+        DeviceModel::mSave();
     }
 
     /**
@@ -243,7 +243,7 @@ class Device extends Controller
             $this->error('设备ID不能为空');
         }
 
-        $device = Devices::with(['classify', 'group'])
+        $device = DeviceModel::with(['classify', 'group'])
                        ->where('id', $id)
                        ->where('is_delete', 0)
                        ->find();
@@ -285,7 +285,7 @@ class Device extends Controller
                 $this->error('设备ID和指令ID不能为空');
             }
             
-            $device = Devices::where('id', $deviceId)->where('is_delete', 0)->find();
+            $device = DeviceModel::where('id', $deviceId)->where('is_delete', 0)->find();
             if (!$device) {
                 $this->error('设备不存在');
             }
@@ -316,7 +316,7 @@ class Device extends Controller
             $this->error('应用ID不能为空');
         }
         
-        $users = ShopUser::getUserList($appId);
+        $users = ShopUserModel::getUserList($appId);
         $this->success('获取成功', $users);
     }
 
@@ -333,7 +333,7 @@ class Device extends Controller
         }
         
         // 根据应用ID获取对应的供应商
-        $suppliers = Supplier::where('app_id', $appId)
+        $suppliers = SupplierModel::where('app_id', $appId)
                             ->where('is_delete', 0)
                             ->field('shop_supplier_id,name')
                             ->select();

@@ -5,17 +5,17 @@ namespace app\common\model;
 use think\admin\Model;
 
 /**
- * 设备指令模型
- * Class DeviceInstruct
+ * 设备分组模型
+ * Class DeviceGroupModel
  * @package app\common\model
  */
-class DeviceInstruct extends Model
+class DeviceGroupModel extends Model
 {
     // 指定数据库连接
     protected $connection = 'mysql2';
     
     // 指定表名
-    protected $table = 'jjjshop_device_instruct';
+    protected $table = 'jjjshop_device_group';
     
     // 指定主键
     protected $pk = 'id';
@@ -32,38 +32,38 @@ class DeviceInstruct extends Model
         'id' => 'integer',
         'shop_supplier_id' => 'integer',
         'status' => 'integer',
-        'app_id' => 'integer',
         'is_delete' => 'integer',
+        'app_id' => 'integer',
         'create_time' => 'integer',
         'update_time' => 'integer',
     ];
     
     /**
-     * 关联设备（多对多）
+     * 关联应用
+     */
+    public function app()
+    {
+        return $this->belongsTo(AppModel::class, 'app_id', 'app_id');
+    }
+    
+    /**
+     * 关联供应商
+     */
+    public function supplier()
+    {
+        return $this->belongsTo(SupplierModel::class, 'shop_supplier_id', 'shop_supplier_id');
+    }
+    
+    /**
+     * 关联设备（一对多）
      */
     public function devices()
     {
-        return $this->belongsToMany(Devices::class, DeviceInstructMiddle::class, 'device_id', 'instruct_id');
+        return $this->hasMany(DeviceModel::class, 'group_id', 'id');
     }
     
     /**
-     * 关联设备指令中间表
-     */
-    public function middle()
-    {
-        return $this->hasMany(DeviceInstructMiddle::class, 'instruct_id', 'id');
-    }
-    
-    /**
-     * 关联设备日志
-     */
-    public function logs()
-    {
-        return $this->hasMany(DeviceLog::class, 'instruct_id', 'id');
-    }
-    
-    /**
-     * 获取指令关联的设备数量
+     * 获取分组下的设备数量
      */
     public function getDeviceCountAttr($value, $data)
     {
@@ -71,7 +71,7 @@ class DeviceInstruct extends Model
     }
     
     /**
-     * 获取启用的指令列表
+     * 获取启用的分组列表
      */
     public static function getEnabledList($shopSupplierId = null)
     {
@@ -85,7 +85,7 @@ class DeviceInstruct extends Model
     }
     
     /**
-     * 获取指令选项（用于下拉选择）
+     * 获取分组选项（用于下拉选择）
      */
     public static function getOptions($shopSupplierId = null)
     {
@@ -95,26 +95,10 @@ class DeviceInstruct extends Model
         foreach ($list as $item) {
             $options[] = [
                 'value' => $item['id'],
-                'label' => $item['instruct_name'] . ' (' . $item['instruct_code'] . ')'
+                'label' => $item['group_name']
             ];
         }
         
         return $options;
-    }
-    
-    /**
-     * 根据指令编码查找指令
-     */
-    public static function findByCode($code, $shopSupplierId = null)
-    {
-        $query = self::where('instruct_code', $code)
-                    ->where('status', 1)
-                    ->where('is_delete', 0);
-        
-        if ($shopSupplierId) {
-            $query->where('shop_supplier_id', $shopSupplierId);
-        }
-        
-        return $query->find();
     }
 }

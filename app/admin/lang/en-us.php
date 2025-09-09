@@ -115,7 +115,7 @@ return array_merge($extra, [
     '仅开发模式可见'          => 'Visible only in Development mode',
     '仅生产模式可见'          => 'Visible only in Production mode',
     '插件名称'                => 'Plugin Name',
-    '应用名称'                => 'App Name',
+    '应用名称'                => 'AppModel Name',
     '插件包名'                => 'Package Name',
     '插件版本'                => 'Plugin Version',
     '授权协议'                => 'License',

@@ -6,10 +6,10 @@ use think\admin\Model;
 
 /**
  * 设备日志模型
- * Class DeviceLog
+ * Class DeviceLogModel
  * @package app\common\model
  */
-class DeviceLog extends Model
+class DeviceLogModel extends Model
 {
     // 指定数据库连接
     protected $connection = 'mysql2';
@@ -50,7 +50,7 @@ class DeviceLog extends Model
      */
     public function device()
     {
-        return $this->belongsTo(Devices::class, 'device_id', 'id');
+        return $this->belongsTo(DeviceModel::class, 'device_id', 'id');
     }
     
     /**
@@ -58,7 +58,7 @@ class DeviceLog extends Model
      */
     public function instruct()
     {
-        return $this->belongsTo(DeviceInstruct::class, 'instruct_id', 'id');
+        return $this->belongsTo(DeviceInstructModel::class, 'instruct_id', 'id');
     }
     
     /**

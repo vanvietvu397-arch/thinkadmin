@@ -6,10 +6,10 @@ use think\admin\Model;
 
 /**
  * 应用模型
- * Class App
+ * Class AppModel
  * @package app\common\model
  */
-class App extends Model
+class AppModel extends Model
 {
     // 指定数据库连接
     protected $connection = 'mysql2';
@@ -61,7 +61,7 @@ class App extends Model
      */
     public function shopUsers()
     {
-        return $this->hasMany(ShopUser::class, 'app_id', 'app_id');
+        return $this->hasMany(ShopUserModel::class, 'app_id', 'app_id');
     }
     
     /**
@@ -69,7 +69,7 @@ class App extends Model
      */
     public function suppliers()
     {
-        return $this->hasMany(Supplier::class, 'app_id', 'app_id');
+        return $this->hasMany(SupplierModel::class, 'app_id', 'app_id');
     }
     
     /**

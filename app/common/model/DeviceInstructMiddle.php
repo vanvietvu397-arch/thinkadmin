@@ -44,7 +44,7 @@ class DeviceInstructMiddle extends Pivot
      */
     public function device()
     {
-        return $this->belongsTo(Devices::class, 'device_id', 'id');
+        return $this->belongsTo(DeviceModel::class, 'device_id', 'id');
     }
     
     /**
@@ -52,7 +52,7 @@ class DeviceInstructMiddle extends Pivot
      */
     public function instruct()
     {
-        return $this->belongsTo(DeviceInstruct::class, 'instruct_id', 'id');
+        return $this->belongsTo(DeviceInstructModel::class, 'instruct_id', 'id');
     }
     
     /**
