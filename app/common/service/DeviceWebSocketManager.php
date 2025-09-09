@@ -53,7 +53,7 @@ class DeviceWebSocketManager
             Gateway::joinGroup($clientId, "device_group_{$deviceId}");
 
             // 更新设备连接状态
-            self::updateDeviceStatus($deviceId, 'online', $clientId);
+            self::updateDeviceStatus($deviceId, 'connected', $clientId);
 
             // 缓存连接信息
             self::$deviceConnections[$deviceId] = [
@@ -110,7 +110,7 @@ class DeviceWebSocketManager
 
             if ($deviceId) {
                 // 更新设备状态
-                self::updateDeviceStatus($deviceId, 'offline');
+                self::updateDeviceStatus($deviceId, 'disconnected');
 
                 // 移除连接缓存
                 unset(self::$deviceConnections[$deviceId]);
@@ -309,12 +309,12 @@ class DeviceWebSocketManager
     private static function updateDeviceStatus(int $deviceId, string $status, ?string $clientId = null): void
     {
         try {
-            $updateData = ['status' => $status];
+            $updateData = ['xiaozhi_status' => $status];
             
-            if ($status === 'online') {
-                $updateData['last_online_time'] = time();
+            if ($status === 'connected') {
+                $updateData['xiaozhi_last_connect_time'] = time();
             } else {
-                $updateData['last_offline_time'] = time();
+                $updateData['xiaozhi_last_disconnect_time'] = time();
             }
 
             DeviceModel::where('id', $deviceId)->update($updateData);
@@ -350,7 +350,7 @@ class DeviceWebSocketManager
             // 更新设备信息
             if (!empty($deviceInfo)) {
                 DeviceModel::where('id', $deviceId)->update([
-                    'device_info' => json_encode($deviceInfo),
+                    //'device_info' => json_encode($deviceInfo),
                     'update_time' => time()
                 ]);
             }
