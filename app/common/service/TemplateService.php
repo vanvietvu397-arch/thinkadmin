@@ -5,7 +5,7 @@ namespace app\common\service;
 use PhpMcp\Server\Attributes\McpTool;
 use think\facade\Log;
 use Psr\Log\LoggerInterface;
-use app\admin\controller\DeviceManager;
+use app\common\service\DeviceManagerService;
 
 /**
  * 模板信息查询服务 
@@ -41,7 +41,7 @@ class TemplateService
             
             // 查找调用栈中的McpWssTransport实例
             foreach ($backtrace as $trace) {
-                if (isset($trace['object']) && $trace['object'] instanceof \app\admin\controller\McpWssTransport) {
+                if (isset($trace['object']) && $trace['object'] instanceof \app\common\service\McpWssTransportService) {
                     $transport = $trace['object'];
                     $callingDeviceId = $transport->getDeviceId();
                     $callingDeviceInfo = $GLOBALS['mcp_device_config_' . $callingDeviceId] ?? null;

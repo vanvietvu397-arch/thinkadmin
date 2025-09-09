@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace app\admin\controller;
+namespace app\common\service;
 
 use Evenement\EventEmitterTrait;
 use PhpMcp\Server\Contracts\LoggerAwareInterface;
@@ -27,12 +27,11 @@ use React\Promise\PromiseInterface;
 
 use function React\Promise\resolve;
 use function React\Promise\reject;
-use app\admin\controller\DeviceManager;
 
 /**
- * WSS传输层实现，支持WebSocket Secure协议连接到小智AI的MCP接入点
+ * WSS传输层服务实现，支持WebSocket Secure协议连接到小智AI的MCP接入点
  */
-class McpWssTransport implements ServerTransportInterface, LoggerAwareInterface, LoopAwareInterface
+class McpWssTransportService implements ServerTransportInterface, LoggerAwareInterface, LoopAwareInterface
 {
     use EventEmitterTrait;
 
@@ -43,11 +42,11 @@ class McpWssTransport implements ServerTransportInterface, LoggerAwareInterface,
     protected bool $closing = false;
     protected string $wssUrl;
     protected ?ThroughStream $messageStream = null;
-    protected ?DeviceManager $deviceManager = null;
+    protected ?DeviceManagerService $deviceManager = null;
     protected string $deviceId;
     protected string $deviceName;
 
-    public function __construct(string $wssUrl, ?DeviceManager $deviceManager = null, ?string $deviceId = null, ?string $deviceName = null)
+    public function __construct(string $wssUrl, ?DeviceManagerService $deviceManager = null, ?string $deviceId = null, ?string $deviceName = null)
     {
         $this->logger = new NullLogger();
         $this->loop = Loop::get();

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace app\admin\controller;
+namespace app\common\service;
 
 use Psr\Log\LoggerInterface;
 
 /**
- * 设备管理器 - 管理多个小智AI设备连接
+ * 设备管理器服务 - 管理多个小智AI设备连接
  */
-class DeviceManager
+class DeviceManagerService
 {
     private LoggerInterface $logger;
     private array $devices = [];

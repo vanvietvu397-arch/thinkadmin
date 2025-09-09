@@ -33,8 +33,8 @@ use PhpMcp\Server\Defaults\BasicContainer;
 use PhpMcp\Server\Server;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
-use app\admin\controller\McpWssTransport;
-use app\admin\controller\DeviceManager;
+use app\common\service\McpWssTransportService;
+use app\common\service\DeviceManagerService;
 
 // 创建应用实例，传入根目录路径
 $app = new App(__DIR__);
@@ -70,7 +70,7 @@ try {
     $logger->info("📱 发现启用设备: " . count($enabledDevices) . " 个");
 
     // 创建设备管理器
-    $deviceManager = new DeviceManager($logger);
+    $deviceManager = new DeviceManagerService($logger);
 
     // 为每个设备创建独立的MCP服务器实例
     $serverInstances = [];
@@ -82,7 +82,7 @@ try {
         // 为每个设备创建独立的DI容器
         $deviceContainer = new BasicContainer();
         $deviceContainer->set(LoggerInterface::class, $logger);
-        $deviceContainer->set(DeviceManager::class, $deviceManager);
+        $deviceContainer->set(DeviceManagerService::class, $deviceManager);
 
         // 为每个设备创建唯一的服务器信息
         $serverName = "MCP Server - {$device['name']}";
@@ -125,7 +125,7 @@ try {
                  $logger->info("🔌 启动设备连接: {$device['name']} (延迟{$delay}秒)");
                  
                  // 创建WSS传输层
-                 $transport = new McpWssTransport(
+                 $transport = new McpWssTransportService(
                      $device['wss_url'], 
                      $deviceManager, 
                      $deviceId, 
