@@ -102,11 +102,6 @@ try {
                  '查询模板相关信息，支持关键词搜索'
              )
             ->withTool(
-                [\app\common\service\TemplateService::class, 'getTemplateCategories'],
-                'get_template_categories',
-                '获取模板分类统计信息'
-            )
-            ->withTool(
                 [\app\common\service\TemplateService::class, 'getTemplateDetail'],
                 'get_template_detail',
                 '根据模板ID获取模板详细信息'
