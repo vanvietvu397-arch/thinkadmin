@@ -28,6 +28,7 @@
     "react/http": "^1.11",
     "react/socket": "^1.16",
     "monolog/monolog": "^3.9",
-    "topthink/think-worker": "^4.0"
+    "workerman/workerman": "^4.0",
+    "workerman/gateway-worker": "^3.0"
   }
 }

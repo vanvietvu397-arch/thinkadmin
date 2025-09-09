@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧展示屏 WebSocket 测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        
+        .section h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 10px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .display-screen {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            min-height: 200px;
+        }
+        
+        .display-screen h4 {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #ecf0f1;
+        }
+        
+        .display-content {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+        
+        .display-meta {
+            font-size: 12px;
+            color: #bdc3c7;
+            margin-top: 10px;
+        }
+        
+        .messages {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background: white;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #007bff;
+            background: #f8f9fa;
+        }
+        
+        .message.received {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .message.sent {
+            border-left-color: #007bff;
+            background: #d1ecf1;
+        }
+        
+        .message.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .waiting {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 40px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖥️ 智慧展示屏 WebSocket 测试</h1>
+            <p>设备绑定 & 内容推送测试</p>
+        </div>
+        
+        <div class="content">
+            <!-- 连接控制 -->
+            <div class="section">
+                <h3>🔌 设备连接</h3>
+                
+                <div class="form-group">
+                    <label>设备ID:</label>
+                    <input type="text" id="deviceId" value="device_001" placeholder="输入设备ID">
+        </div>
+        
+                <button class="btn btn-primary" onclick="connect()">🔗 连接并绑定设备</button>
+                <button class="btn btn-danger" onclick="disconnect()">❌ 断开连接</button>
+                
+                <div id="status" class="status disconnected">❌ 未连接</div>
+        </div>
+        
+            <!-- 智慧展示屏 -->
+            <div class="section">
+                <h3>📺 智慧展示屏</h3>
+                <div id="displayScreen" class="display-screen">
+                    <div class="waiting">
+                        <h4>等待接收推送内容...</h4>
+                        <p>设备绑定成功后，将在此显示推送的模板内容</p>
+                    </div>
+                </div>
+        </div>
+        
+            <!-- 消息日志 -->
+            <div class="section">
+                <h3>📋 消息日志</h3>
+                <button class="btn btn-success" onclick="clearMessages()" style="float: right;">🗑️ 清空</button>
+        <div id="messages" class="messages"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let deviceId = '';
+        let isConnected = false;
+        let heartbeatTimer = null;
+        let reconnectTimer = null;
+        let reconnectAttempts = 0;
+        let maxReconnectAttempts = 5;
+        
+        // 连接并绑定设备
+        function connect() {
+            deviceId = document.getElementById('deviceId').value.trim();
+            
+            if (!deviceId) {
+                alert('请输入设备ID');
+                return;
+            }
+            
+            try {
+                // 连接到WebSocket服务器，带上设备ID参数
+                const wsUrl = `ws://127.0.0.1:7272?device_id=${encodeURIComponent(deviceId)}`;
+                ws = new WebSocket(wsUrl);
+                
+                addMessage(`正在连接: ${wsUrl}`, 'sent');
+                
+                ws.onopen = function(event) {
+                    isConnected = true;
+                    reconnectAttempts = 0; // 重置重连次数
+                    updateStatus('🔗 已连接，正在绑定设备...', true);
+                    addMessage('WebSocket连接已建立', 'received');
+                    startHeartbeat(); // 开始心跳
+                };
+                
+                ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        addMessage(`收到消息: ${JSON.stringify(data)}`, 'received');
+                        handleMessage(data);
+                    } catch (e) {
+                        addMessage(`收到非JSON消息: ${event.data}`, 'received');
+                    }
+                };
+                
+                ws.onclose = function(event) {
+                    isConnected = false;
+                    stopHeartbeat(); // 停止心跳
+                    updateStatus('❌ 连接已断开', false);
+                    addMessage(`WebSocket连接已断开 (代码: ${event.code}, 原因: ${event.reason})`, 'error');
+                    resetDisplayScreen();
+                    
+                    // 自动重连
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                        attemptReconnect();
+                    } else {
+                        addMessage('❌ 已达到最大重连次数，请手动重新连接', 'error');
+                    }
+                };
+                
+                ws.onerror = function(error) {
+                    isConnected = false;
+                    updateStatus('❌ 连接错误', false);
+                    addMessage(`WebSocket错误: ${error}`, 'error');
+                };
+                
+            } catch (error) {
+                addMessage(`连接失败: ${error.message}`, 'error');
+            }
+        }
+        
+        // 断开连接
+        function disconnect() {
+            stopHeartbeat(); // 停止心跳
+            clearTimeout(reconnectTimer); // 清除重连定时器
+            reconnectAttempts = maxReconnectAttempts; // 阻止自动重连
+            
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            isConnected = false;
+            updateStatus('❌ 未连接', false);
+            resetDisplayScreen();
+        }
+
+        // 处理接收到的消息
+        function handleMessage(data) {
+            switch(data.type) {
+                case 'init':
+                    addMessage(`✅ 初始化成功，客户端ID: ${data.client_id}`, 'received');
+                    break;
+                    
+                case 'connect_success':
+                    updateStatus('✅ 设备连接成功', true);
+                    addMessage(`✅ 设备连接成功: ${data.device_id}`, 'received');
+                    break;
+                    
+                case 'bind_success':
+                    updateStatus('✅ 设备绑定成功，等待推送...', true);
+                    addMessage(`✅ 设备绑定成功: ${data.device_id}`, 'received');
+                    break;
+                    
+                case 'template_display':
+                    addMessage('📄 收到模板推送内容', 'received');
+                    displayContent(data);
+                    break;
+                    
+                case 'heartbeat_response':
+                case 'pong':
+                case 'ping':
+                    // 收到服务端心跳，回复pong
+                    if (data.type === 'ping') {
+                        sendPong();
+                    }
+                    addMessage('💓 心跳响应正常', 'received');
+                    break;
+                    
+                default:
+                    addMessage(`❓ 未知消息类型: ${data.type}`, 'received');
+            }
+        }
+
+        // 显示推送内容到智慧展示屏
+        function displayContent(data) {
+            const displayScreen = document.getElementById('displayScreen');
+            const content = data.data;
+            
+            displayScreen.innerHTML = `
+                <h4>📄 ${content.title || '推送内容'}</h4>
+                <div class="display-content">
+                    <div><strong>模板名称:</strong> ${content.template_name || '未知'}</div>
+                    <div><strong>内容:</strong></div>
+                    <div style="margin-top: 10px; white-space: pre-wrap;">${content.content || '无内容'}</div>
+                </div>
+                <div class="display-meta">
+                    <div>设备ID: ${data.device_id} | 推送时间: ${content.display_time || new Date().toLocaleString()}</div>
+                </div>
+            `;
+            
+            // 添加闪烁效果提示新内容
+            displayScreen.style.animation = 'none';
+            setTimeout(() => {
+                displayScreen.style.animation = 'pulse 1s ease-in-out';
+            }, 10);
+        }
+
+        // 重置展示屏
+        function resetDisplayScreen() {
+            const displayScreen = document.getElementById('displayScreen');
+            displayScreen.innerHTML = `
+                <div class="waiting">
+                    <h4>等待接收推送内容...</h4>
+                    <p>设备绑定成功后，将在此显示推送的模板内容</p>
+                </div>
+            `;
+        }
+
+        // 更新连接状态
+        function updateStatus(text, connected) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = text;
+            statusEl.className = 'status ' + (connected ? 'connected' : 'disconnected');
+        }
+
+        // 添加消息到日志
+        function addMessage(message, type = '') {
+            const messagesEl = document.getElementById('messages');
+            const messageEl = document.createElement('div');
+            messageEl.className = 'message ' + type;
+            
+            const timeStr = new Date().toLocaleTimeString();
+            messageEl.innerHTML = `[${timeStr}] ${message}`;
+            
+            messagesEl.appendChild(messageEl);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        // 清空消息日志
+        function clearMessages() {
+            document.getElementById('messages').innerHTML = '';
+        }
+
+        // 开始心跳
+        function startHeartbeat() {
+            stopHeartbeat(); // 先停止之前的心跳
+            heartbeatTimer = setInterval(function() {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    sendHeartbeat();
+                }
+            }, 25000); // 25秒发送一次心跳，比服务端30秒间隔短一点
+        }
+
+        // 停止心跳
+        function stopHeartbeat() {
+            if (heartbeatTimer) {
+                clearInterval(heartbeatTimer);
+                heartbeatTimer = null;
+            }
+        }
+
+        // 发送心跳
+        function sendHeartbeat() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const heartbeatData = {
+                    type: 'device_heartbeat',
+                    device_id: deviceId,
+                    timestamp: Date.now()
+                };
+                ws.send(JSON.stringify(heartbeatData));
+                addMessage('💓 发送心跳', 'sent');
+            }
+        }
+
+        // 回复服务端ping
+        function sendPong() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const pongData = {
+                    type: 'pong',
+                    timestamp: Date.now()
+                };
+                ws.send(JSON.stringify(pongData));
+                addMessage('🏓 回复pong', 'sent');
+            }
+        }
+
+        // 尝试重连
+        function attemptReconnect() {
+            reconnectAttempts++;
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttempts - 1), 30000); // 指数退避，最大30秒
+            
+            updateStatus(`🔄 ${delay/1000}秒后尝试第${reconnectAttempts}次重连...`, false);
+            addMessage(`🔄 ${delay/1000}秒后尝试第${reconnectAttempts}次重连...`, 'sent');
+            
+            reconnectTimer = setTimeout(function() {
+                if (reconnectAttempts <= maxReconnectAttempts) {
+                    addMessage(`🔄 开始第${reconnectAttempts}次重连...`, 'sent');
+                    connect();
+                }
+            }, delay);
+        }
+
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.02); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 页面加载完成
+        window.onload = function() {
+            addMessage('📱 页面加载完成，请输入设备ID并点击连接', 'received');
+        };
+
+        // 页面关闭时断开连接
+        window.onbeforeunload = function() {
+            if (ws) {
+                ws.close();
+            }
+        };
+    </script>
+</body>
+</html>

@@ -6,7 +6,7 @@ use PhpMcp\Server\Attributes\McpTool;
 use think\facade\Log;
 use app\common\model\DeviceModel;
 use think\facade\Db;
-use app\common\service\WebSocketService;
+use GatewayWorker\Lib\Gateway;
 
 /**
  * 模板信息查询服务 
@@ -350,16 +350,26 @@ class TemplateService
     private static function pushToDisplayScreen(string $deviceId, array $content): bool
     {
         try {
-            // 使用 WebSocketService 发送消息
-            $success = WebSocketService::sendToDevice($deviceId, $content);
+            // 构造推送数据
+            $pushData = [
+                'type' => 'template_display',
+                'device_id' => $deviceId,
+                'timestamp' => time(),
+                'data' => $content
+            ];
+
+            // 使用设备ID作为UID标识，推送到对应的智慧展示屏
+            $uid = 'device_' . $deviceId;
             
-            if ($success) {
-                Log::info("推送到展示屏成功 - 设备ID: {$deviceId}", $content);
+            // 检查设备是否在线
+            if (Gateway::isUidOnline($uid)) {
+                Gateway::sendToUid($uid, json_encode($pushData));
+                Log::info("推送到展示屏成功 - 设备ID: {$deviceId}", $pushData);
+                return true;
             } else {
                 Log::warning("设备离线，推送失败 - 设备ID: {$deviceId}");
+                return false;
             }
-            
-            return $success;
         } catch (\Exception $e) {
             Log::error("推送到展示屏失败 - 设备ID: {$deviceId}, 错误: " . $e->getMessage());
             return false;
