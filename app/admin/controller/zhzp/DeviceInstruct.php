@@ -246,3 +246,4 @@ class DeviceInstruct extends Controller
         $this->success('获取成功', $list);
     }
 }
+
