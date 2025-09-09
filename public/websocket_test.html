@@ -441,7 +441,7 @@
         function sendHeartbeat() {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 const heartbeatData = {
-                    type: 'device_heartbeat',
+                    type: 'heartbeat',
                     device_id: deviceId,
                     timestamp: Date.now()
                 };

@@ -9,6 +9,7 @@
 namespace app\gateway;
 
 use \GatewayWorker\Lib\Gateway;
+use think\facade\Log;
 use Workerman\Lib\Timer;
 use Workerman\Worker;
 use think\worker\Application;
@@ -68,7 +69,6 @@ class Events
         if (isset($data['get']['device_id'])) {
             $params['device_id'] = $data['get']['device_id'];
         }
-        
         // 处理设备连接
         \app\common\service\DeviceWebSocketManager::onDeviceConnect($client_id, $params);
         if (isset($data['get']['device_id'])) {

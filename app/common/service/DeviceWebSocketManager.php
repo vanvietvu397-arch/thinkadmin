@@ -27,6 +27,7 @@ class DeviceWebSocketManager
      */
     public static function onDeviceConnect(string $clientId, array $params = []): bool
     {
+    
         try {
             $deviceId = $params['device_id'] ?? null;
             
@@ -65,6 +66,7 @@ class DeviceWebSocketManager
 
             // 发送连接确认消息
             $welcomeMessage = [
+                'code' => 0,
                 'type' => 'connection_confirmed',
                 'device_id' => $deviceId,
                 'device_name' => $device->device_name,

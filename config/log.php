@@ -1,5 +1,5 @@
 <?php
-
+use think\facade\Env;
 // +----------------------------------------------------------------------
 // | Static Plugin for ThinkAdmin
 // +----------------------------------------------------------------------
@@ -13,10 +13,10 @@
 // | gitee 代码仓库：https://gitee.com/zoujingli/think-plugs-static
 // | github 代码仓库：https://github.com/zoujingli/think-plugs-static
 // +----------------------------------------------------------------------
-
+$rootPath = dirname(__DIR__);
 return [
     // 默认日志通道
-    'default'      => 'file',
+    'default'      => Env::get('log.channel', 'file'),
     // 日志记录级别
     'level'        => [],
     // 日志类型记录的通道
@@ -31,11 +31,11 @@ return [
             // 日志记录方式
             'type'           => 'File',
             // 日志保存目录
-            'path'           => '',
+            'path'           => "{$rootPath}/runtime/logs/",
             // 单文件日志写入
             'single'         => true,
             // 独立日志级别
-            'apart_level'    => true,
+            'apart_level'    => ['error','warning','sql'],
             // 每个文件大小 ( 10兆 )
             'file_size'      => 10485760,
             // 日志日期格式
@@ -51,7 +51,7 @@ return [
             // 日志输出格式化
             'format'         => '[%s][%s] %s',
             // 是否实时写入
-            'realtime_write' => false,
+            'realtime_write' => true,
         ],
     ],
 ];
