@@ -258,7 +258,7 @@
             
             try {
                 // 连接到WebSocket服务器，带上设备ID参数
-                const wsUrl = `ws://127.0.0.1:7272?device_id=${encodeURIComponent(deviceId)}`;
+                const wsUrl = `ws://127.0.0.1:2348?device_id=${encodeURIComponent(deviceId)}`;
                 ws = new WebSocket(wsUrl);
                 
                 addMessage(`正在连接: ${wsUrl}`, 'sent');

@@ -36,6 +36,7 @@ $gateway->pingData = '{"type":"ping"}';
 $gateway->registerAddress = '127.0.0.1:1236';
 
 // 当客户端连接上来时，设置连接的onWebSocketConnect，即在websocket握手时的回调
+// 注意：业务逻辑的onWebSocketConnect在Events.php中处理，这里只做基础的连接验证
 $gateway->onConnect = function($connection)
 {
     $connection->onWebSocketConnect = function($connection , $http_header)
@@ -51,6 +52,9 @@ $gateway->onConnect = function($connection)
         */
         // onWebSocketConnect 里面$_GET $_SERVER是可用的
         // var_dump($_GET, $_SERVER);
+        
+        // 记录连接信息到日志
+        error_log("WebSocket连接建立: " . json_encode($_GET));
     };
 };
 
