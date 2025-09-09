@@ -27,7 +27,7 @@ class DeviceWebSocketManager
      */
     public static function onDeviceConnect(string $clientId, array $params = []): bool
     {
-    
+
         try {
             $deviceId = $params['device_id'] ?? null;
             
@@ -371,7 +371,7 @@ class DeviceWebSocketManager
             $interactionData = $message['interaction_data'] ?? [];
             
             // 记录用户交互
-            Db::name('shop_voice_conversation')->insert([
+            Db::connect('mysql2')->name('shop_voice_conversation')->insert([
                 'app_id' => $message['app_id'] ?? 10001,
                 'device_id' => $deviceId,
                 'input_text' => $interactionData['user_input'] ?? '',
@@ -395,7 +395,7 @@ class DeviceWebSocketManager
     private static function saveOfflineMessage(int $deviceId, array $message): void
     {
         try {
-            Db::name('shop_voice_offline_message')->insert([
+            Db::connect('mysql2')->name('shop_voice_offline_message')->insert([
                 'device_id' => $deviceId,
                 'message_type' => $message['type'] ?? 'unknown',
                 'message_content' => json_encode($message),
@@ -417,7 +417,7 @@ class DeviceWebSocketManager
     {
         try {
             // 获取未推送的离线消息
-            $offlineMessages = Db::name('shop_voice_offline_message')
+            $offlineMessages = Db::connect('mysql2')->name('shop_voice_offline_message')
                 ->where('device_id', $deviceId)
                 ->where('status', 0)
                 ->order('create_time ASC')
@@ -425,10 +425,10 @@ class DeviceWebSocketManager
 
             foreach ($offlineMessages as $offlineMessage) {
                 $messageContent = json_decode($offlineMessage['message_content'], true);
-                
+
                 if (self::pushToDevice($deviceId, $messageContent, false)) {
                     // 标记为已推送
-                    Db::name('shop_voice_offline_message')
+                    Db::connect('mysql2')->name('shop_voice_offline_message')
                         ->where('id', $offlineMessage['id'])
                         ->update([
                             'status' => 1,
