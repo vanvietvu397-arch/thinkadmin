@@ -1,3 +1,7 @@
 CHCP 65001
-php -d error_reporting="E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING & ~E_STRICT" workerman\start_register.php workerman\start_web.php workerman\start_gateway.php workerman\start_businessworker.php
+start "Register Service" php think worker:gateway_win register
+start "Business Worker Service" php think worker:gateway_win business_worker
+start "Gateway Service" php think worker:gateway_win gateway
+echo 所有服务已启动，按任意键关闭所有服务...
 pause
+taskkill /f /im php.exe
