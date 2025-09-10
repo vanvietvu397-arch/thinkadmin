@@ -45,6 +45,14 @@ class McpWssTransportService implements ServerTransportInterface, LoggerAwareInt
     protected ?DeviceManagerService $deviceManager = null;
     protected string $deviceId;
     protected string $deviceName;
+    protected ?\React\EventLoop\TimerInterface $heartbeatTimer = null;
+    protected ?\React\EventLoop\TimerInterface $reconnectTimer = null;
+    protected int $reconnectAttempts = 0;
+    protected int $maxReconnectAttempts = 5;
+    protected int $reconnectInterval = 30; // 秒
+    protected int $heartbeatInterval = 60; // 秒
+    protected int $lastMessageTime = 0;
+    protected bool $isReconnecting = false;
 
     public function __construct(string $wssUrl, ?DeviceManagerService $deviceManager = null, ?string $deviceId = null, ?string $deviceName = null)
     {
@@ -92,6 +100,23 @@ class McpWssTransportService implements ServerTransportInterface, LoggerAwareInt
         return $this->deviceName;
     }
 
+    /**
+     * 设置重连配置
+     */
+    public function setReconnectConfig(int $maxAttempts = 5, int $interval = 30): void
+    {
+        $this->maxReconnectAttempts = $maxAttempts;
+        $this->reconnectInterval = $interval;
+    }
+
+    /**
+     * 设置心跳间隔
+     */
+    public function setHeartbeatInterval(int $interval = 60): void
+    {
+        $this->heartbeatInterval = $interval;
+    }
+
     public function setLoop(LoopInterface $loop): void
     {
         $this->loop = $loop;
@@ -112,13 +137,20 @@ class McpWssTransportService implements ServerTransportInterface, LoggerAwareInt
         $this->logger->info("Connecting to WSS endpoint: {$this->wssUrl}");
 
         try {
-            // 创建带有SSL配置的连接器
+            // 创建带有优化的SSL配置的连接器
             $connector = new Connector($this->loop, null, [
-                'timeout' => 10,
+                'timeout' => 30, // 增加连接超时时间
                 'tls' => [
                     'verify_peer' => false,
                     'verify_peer_name' => false,
-                    'allow_self_signed' => true
+                    'allow_self_signed' => true,
+                    'crypto_method' => STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT | STREAM_CRYPTO_METHOD_TLSv1_3_CLIENT,
+                    'ciphers' => 'ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:DHE+CHACHA20:!aNULL:!MD5:!DSS',
+                    'disable_compression' => true,
+                    'peer_name' => 'api.xiaozhi.me'
+                ],
+                'dns' => [
+                    'timeout' => 5
                 ]
             ]);
 
@@ -140,6 +172,7 @@ class McpWssTransportService implements ServerTransportInterface, LoggerAwareInt
 
                     // 监听WebSocket消息
                     $conn->on('message', function ($msg) {
+                        $this->lastMessageTime = time();
                         $this->handleIncomingMessage($msg->getPayload());
                     });
 
@@ -160,6 +193,13 @@ class McpWssTransportService implements ServerTransportInterface, LoggerAwareInt
                         $this->deviceManager->deviceConnected($this->deviceId, $sessionId);
                     }
 
+                    // 启动心跳机制
+                    $this->startHeartbeat();
+                    
+                    // 重置重连计数器
+                    $this->reconnectAttempts = 0;
+                    $this->isReconnecting = false;
+
                     // 触发连接事件
                     $this->emit('client_connected', [$sessionId]);
                     $this->emit('ready');
@@ -167,8 +207,8 @@ class McpWssTransportService implements ServerTransportInterface, LoggerAwareInt
                 ->catch(function (Throwable $e) {
                     $this->logger->error("Failed to connect to WSS endpoint", ['error' => $e->getMessage()]);
 
-                    // 不要自动重连，让用户手动重启
-                    $this->logger->info("Connection failed. Please check the WSS URL and token.");
+                    // 启动自动重连
+                    $this->scheduleReconnect();
                 });
 
         } catch (Throwable $e) {
@@ -212,6 +252,9 @@ class McpWssTransportService implements ServerTransportInterface, LoggerAwareInt
     {
         $sessionId = 'wss-session-' . $this->deviceId . '-' . substr(md5($this->wssUrl), 0, 8);
 
+        // 停止心跳
+        $this->stopHeartbeat();
+
         // 记录设备断开连接
         if ($this->deviceManager) {
             $this->deviceManager->deviceDisconnected($sessionId);
@@ -223,7 +266,13 @@ class McpWssTransportService implements ServerTransportInterface, LoggerAwareInt
             $this->messageStream->close();
             $this->messageStream = null;
         }
+        
         $this->emit('client_disconnected', [$sessionId, 'WSS connection closed']);
+        
+        // 如果不是主动关闭，则启动重连
+        if (!$this->closing) {
+            $this->scheduleReconnect();
+        }
     }
 
     /**
@@ -264,6 +313,10 @@ class McpWssTransportService implements ServerTransportInterface, LoggerAwareInt
         $this->listening = false;
         $this->logger->info('Closing WSS transport...');
 
+        // 停止心跳和重连
+        $this->stopHeartbeat();
+        $this->cancelReconnect();
+
         if ($this->connection) {
             $this->connection->close();
             $this->connection = null;
@@ -276,5 +329,130 @@ class McpWssTransportService implements ServerTransportInterface, LoggerAwareInt
 
         $this->emit('close', ['WSS transport closed.']);
         $this->removeAllListeners();
+    }
+
+    /**
+     * 启动心跳机制
+     */
+    protected function startHeartbeat(): void
+    {
+        $this->stopHeartbeat(); // 先停止现有的心跳
+
+        $this->heartbeatTimer = $this->loop->addPeriodicTimer($this->heartbeatInterval, function () {
+            $this->sendHeartbeat();
+        });
+
+        $this->logger->info("心跳机制已启动", [
+            'deviceId' => $this->deviceId,
+            'interval' => $this->heartbeatInterval
+        ]);
+    }
+
+    /**
+     * 停止心跳机制
+     */
+    protected function stopHeartbeat(): void
+    {
+        if ($this->heartbeatTimer) {
+            $this->loop->cancelTimer($this->heartbeatTimer);
+            $this->heartbeatTimer = null;
+        }
+    }
+
+    /**
+     * 发送心跳消息
+     */
+    protected function sendHeartbeat(): void
+    {
+        if (!$this->connection || !$this->listening) {
+            return;
+        }
+
+        try {
+            // 发送ping消息保持连接活跃
+            $pingMessage = json_encode(['type' => 'ping', 'timestamp' => time()]);
+            $this->connection->send($pingMessage);
+            
+            $this->logger->debug("发送心跳消息", [
+                'deviceId' => $this->deviceId,
+                'timestamp' => time()
+            ]);
+        } catch (Throwable $e) {
+            $this->logger->error("发送心跳失败", [
+                'deviceId' => $this->deviceId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * 安排重连
+     */
+    protected function scheduleReconnect(): void
+    {
+        if ($this->isReconnecting || $this->closing) {
+            return;
+        }
+
+        if ($this->reconnectAttempts >= $this->maxReconnectAttempts) {
+            $this->logger->error("达到最大重连次数，停止重连", [
+                'deviceId' => $this->deviceId,
+                'attempts' => $this->reconnectAttempts
+            ]);
+            return;
+        }
+
+        $this->isReconnecting = true;
+        $this->reconnectAttempts++;
+
+        $this->logger->info("安排重连", [
+            'deviceId' => $this->deviceId,
+            'attempt' => $this->reconnectAttempts,
+            'maxAttempts' => $this->maxReconnectAttempts,
+            'delay' => $this->reconnectInterval
+        ]);
+
+        $this->reconnectTimer = $this->loop->addTimer($this->reconnectInterval, function () {
+            $this->attemptReconnect();
+        });
+    }
+
+    /**
+     * 尝试重连
+     */
+    protected function attemptReconnect(): void
+    {
+        if ($this->closing) {
+            return;
+        }
+
+        $this->logger->info("尝试重连", [
+            'deviceId' => $this->deviceId,
+            'attempt' => $this->reconnectAttempts
+        ]);
+
+        try {
+            $this->isReconnecting = false;
+            $this->listen(); // 重新启动连接
+        } catch (Throwable $e) {
+            $this->logger->error("重连失败", [
+                'deviceId' => $this->deviceId,
+                'error' => $e->getMessage()
+            ]);
+            $this->isReconnecting = false;
+            $this->scheduleReconnect(); // 继续尝试重连
+        }
+    }
+
+    /**
+     * 取消重连
+     */
+    protected function cancelReconnect(): void
+    {
+        if ($this->reconnectTimer) {
+            $this->loop->cancelTimer($this->reconnectTimer);
+            $this->reconnectTimer = null;
+        }
+        $this->isReconnecting = false;
     }
 }

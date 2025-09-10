@@ -2,11 +2,11 @@
 
 /*
     |--------------------------------------------------------------------------
-    | 无心跳版多设备MCP WSS服务器
+    | 增强版多设备MCP WSS服务器
     |--------------------------------------------------------------------------
     |
-    | 完全依赖小智AI的心跳机制，不主动发送心跳
-    | 专注于保持连接稳定，减少干扰
+    | 支持自动重连、心跳保活、连接监控
+    | 优化SSL/TLS配置，提高连接稳定性
     |
 */
 
@@ -61,7 +61,7 @@ class StderrLogger extends AbstractLogger
 
 try {
     $logger = new StderrLogger();
-    $logger->info("🚀 启动无心跳版多设备MCP服务器 (依赖小智AI心跳机制)");
+    $logger->info("🚀 启动增强版多设备MCP服务器 (支持自动重连和心跳保活)");
 
     // 从数据库查询启用的设备配置
     $deviceModel = new DeviceModel();
@@ -137,6 +137,10 @@ try {
                      $deviceName
                  );
                  $transport->setLogger($logger);
+                 
+                 // 配置重连和心跳参数
+                 $transport->setReconnectConfig(10, 15); // 最多重连10次，间隔15秒
+                 $transport->setHeartbeatInterval(45); // 心跳间隔45秒
 
                  // 存储transport实例到全局变量，供TemplateService使用
                  $GLOBALS['mcp_transport_' . $deviceId] = $transport;
@@ -146,15 +150,20 @@ try {
 
                  // 添加事件监听
                  $transport->on('ready', function () use ($logger, $deviceName) {
-                     $logger->info("🟢 设备就绪: {$deviceName} (依赖小智AI心跳)");
+                     $logger->info("🟢 设备就绪: {$deviceName} (支持自动重连和心跳保活)");
                  });
 
                  $transport->on('client_connected', function ($sessionId) use ($logger, $deviceName) {
                      $logger->info("🔗 设备已连接: {$deviceName}");
                  });
 
-                 $transport->on('client_disconnected', function ($sessionId, $reason) use ($logger, $deviceName) {
-                     $logger->info("🔴 设备断开: {$deviceName} - {$reason}");
+                 $transport->on('client_disconnected', function ($sessionId, $reason) use ($logger, $deviceName, $deviceId) {
+                     $logger->info("🔴 设备断开: {$deviceName} - {$reason}", [
+                         'deviceId' => $deviceId,
+                         'sessionId' => $sessionId,
+                         'reason' => $reason,
+                         'timestamp' => date('Y-m-d H:i:s')
+                     ]);
                  });
 
                  $transport->on('error', function ($error) use ($logger, $deviceName) {
@@ -173,23 +182,58 @@ try {
         $serverInstances[] = $serverInstance;
     }
 
-    $logger->info("⏳ 等待设备启动... (每个设备延迟10秒，无主动心跳)");
+    $logger->info("⏳ 等待设备启动... (每个设备延迟2秒，支持自动重连)");
 
-    // 添加全局状态监控（每10分钟检查一次）
-    $loop->addPeriodicTimer(600, function() use ($logger, $deviceManager) {
+    // 添加全局状态监控（每2分钟检查一次）
+    $loop->addPeriodicTimer(120, function() use ($logger, $deviceManager) {
         $devices = $deviceManager->getAllDevices();
         $activeDevices = 0;
+        $deviceStatus = [];
         
-        foreach ($devices as $device) {
-            if (isset($device['status']) && $device['status'] === 'connected') {
+        foreach ($devices as $deviceId => $device) {
+            $isConnected = isset($device['connected']) && $device['connected'];
+            if ($isConnected) {
                 $activeDevices++;
             }
+            $deviceStatus[] = [
+                'deviceId' => $deviceId,
+                'name' => $device['name'] ?? 'Unknown',
+                'connected' => $isConnected,
+                'lastSeen' => $device['last_seen'] ?? 'Never'
+            ];
         }
         
         $logger->info("💓 状态监控: {$activeDevices} 个设备在线", [
             'totalDevices' => count($devices),
-            'activeDevices' => $activeDevices
+            'activeDevices' => $activeDevices,
+            'deviceStatus' => $deviceStatus
         ]);
+    });
+
+    // 添加连接健康检查（每30秒检查一次）
+    $loop->addPeriodicTimer(30, function() use ($logger, $deviceManager) {
+        $devices = $deviceManager->getAllDevices();
+        
+        foreach ($devices as $deviceId => $device) {
+            if (isset($device['connected']) && $device['connected']) {
+                // 检查最后活动时间
+                $lastSeen = $device['last_seen'] ?? null;
+                if ($lastSeen) {
+                    $lastSeenTime = strtotime($lastSeen);
+                    $timeSinceLastSeen = time() - $lastSeenTime;
+                    
+                    // 如果超过5分钟没有活动，记录警告
+                    if ($timeSinceLastSeen > 300) {
+                        $logger->warning("设备长时间无活动", [
+                            'deviceId' => $deviceId,
+                            'deviceName' => $device['name'] ?? 'Unknown',
+                            'lastSeen' => $lastSeen,
+                            'minutesSinceLastSeen' => round($timeSinceLastSeen / 60, 1)
+                        ]);
+                    }
+                }
+            }
+        }
     });
 
     // 保持服务器运行
