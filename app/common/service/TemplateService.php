@@ -112,7 +112,7 @@ class TemplateService
                 'message' => '模板不存在'
             ];
         }
-
+        self::pushToDisplayScreen(self::$deviceId, $template);
         return [
             'success' => true,
             'message' => '获取模板详情成功',
