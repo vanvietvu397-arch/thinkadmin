@@ -1,0 +1,83 @@
+<form class="layui-form form-search" action="{:request()->url()}" onsubmit="return false" method="get" autocomplete="off">
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">设备名称</label>
+        <div class="layui-input-inline">
+            <select name="device_id" lay-search>
+                <option value="">请选择设备</option>
+                {foreach $devices as $id => $name}
+                <option value="{$id}" {if isset($get.device_id) and $get.device_id eq $id}selected{/if}>{$name}</option>
+                {/foreach}
+            </select>
+        </div>
+    </div>
+    
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">在线状态</label>
+        <div class="layui-input-inline">
+            <select name="status">
+                <option value="">请选择状态</option>
+                <option value="1" {if isset($get.status) and $get.status eq '1'}selected{/if}>在线中</option>
+                <option value="0" {if isset($get.status) and $get.status eq '0'}selected{/if}>已离线</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">IP地址</label>
+        <div class="layui-input-inline">
+            <input name="ip_address" value="{$get.ip_address|default=''}" placeholder="请输入IP地址" class="layui-input">
+        </div>
+    </div>
+    
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">开始时间</label>
+        <div class="layui-input-inline">
+            <input name="start_time" value="{$get.start_time|default=''}" placeholder="请选择开始时间" class="layui-input" id="start_time">
+        </div>
+    </div>
+    
+    <div class="layui-form-item layui-inline">
+        <label class="layui-form-label">创建时间</label>
+        <div class="layui-input-inline">
+            <input name="create_time" value="{$get.create_time|default=''}" placeholder="请选择创建时间" class="layui-input" id="create_time">
+        </div>
+    </div>
+    
+    <div class="layui-form-item layui-inline">
+        <button class="layui-btn" type="submit">
+            <i class="layui-icon layui-icon-search"></i> 搜 索
+        </button>
+        <button class="layui-btn layui-btn-primary" type="reset">
+            <i class="layui-icon layui-icon-refresh"></i> 重 置
+        </button>
+    </div>
+</form>
+
+<script>
+layui.use(['form', 'laydate'], function(){
+    var form = layui.form;
+    var laydate = layui.laydate;
+    
+    // 开始时间选择器
+    laydate.render({
+        elem: '#start_time',
+        type: 'datetime',
+        range: '~',
+        format: 'yyyy-MM-dd HH:mm:ss'
+    });
+    
+    // 创建时间选择器
+    laydate.render({
+        elem: '#create_time',
+        type: 'datetime',
+        range: '~',
+        format: 'yyyy-MM-dd HH:mm:ss'
+    });
+    
+    // 表单提交
+    form.on('submit(form-search)', function(data){
+        $('#DeviceOnlineRecordTable').trigger('reload');
+        return false;
+    });
+});
+</script>

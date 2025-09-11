@@ -1,0 +1,136 @@
+{extend name='table'}
+
+{block name="button"}
+<!--{if auth("remove")}-->
+<button data-table-id="DeviceOnlineRecordTable" data-action='{:url("remove")}' data-rule="id#{id}" data-confirm="确定要批量删除选中的记录吗？" class='layui-btn layui-btn-sm layui-btn-primary'>批量删除</button>
+<!--{/if}-->
+
+<!--{if auth("clearAll")}-->
+<button data-table-id="DeviceOnlineRecordTable" data-action='{:url("clearAll")}' data-confirm="确定要清空所有在线记录吗？此操作不可恢复！" class='layui-btn layui-btn-sm layui-btn-danger'>清空记录</button>
+<!--{/if}-->
+
+
+{/block}
+
+{block name="content"}
+<div class="layui-tab layui-tab-card">
+    <ul class="layui-tab-title">
+        {foreach ['index'=>'在线记录','recycle'=>'回 收 站'] as $k=>$v}{if isset($type) and $type eq $k}
+        <li class="layui-this" data-open="{:sysuri()}?type={$k}">{$v}</li>
+        {else}
+        <li data-open="{:sysuri()}?type={$k}">{$v}</li>
+        {/if}{/foreach}
+    </ul>
+    <div class="layui-tab-content">
+        {include file='zhzp/device_online_record/index_search'}
+        <table id="DeviceOnlineRecordTable" data-url="{:request()->url()}" data-target-search="form.form-search"></table>
+    </div>
+</div>
+{/block}
+
+{block name='script'}
+<script>
+    $(function () {
+        // 初始化表格组件
+        $('#DeviceOnlineRecordTable').layTable({
+            even: true, height: 'full',
+            sort: {field: 'start_time', type: 'desc'},
+            where: {type: '{$type|default="index"}'},
+            cols: [[
+                {checkbox: true, fixed: true},
+                {field: 'id', title: 'ID', width: 80, align: 'center', sort: true},
+                {field: 'device_id', title: '设备信息', minWidth: 160, align: 'center', templet: '#DeviceTpl'},
+                {field: 'start_time', title: '开始时间', minWidth: 160, align: 'center', sort: true, templet: '#StartTimeTpl'},
+                {field: 'end_time', title: '结束时间', minWidth: 160, align: 'center', sort: true, templet: '#EndTimeTpl'},
+                {field: 'duration', title: '持续时长', width: 120, align: 'center', templet: '#DurationTpl'},
+                {field: 'ip_address', title: 'IP地址', width: 120, align: 'center'},
+                {field: 'status', title: '状态', width: 100, align: 'center', templet: '#StatusTpl'},
+                {field: 'create_time', title: '创建时间', minWidth: 160, align: 'center', sort: true, templet: '#CreateTimeTpl'},
+                {toolbar: '#toolbar', align: 'center', minWidth: 120, title: '数据操作', fixed: 'right'},
+            ]]
+        });
+    });
+</script>
+
+<!-- 设备信息模板 -->
+<script type="text/html" id="DeviceTpl">
+    {{# if(d.device && d.device.device_name) { }}
+    <div>
+        <div><strong>{{ d.device.device_name }}</strong></div>
+        <div style="font-size: 12px; color: #999;">ID: {{ d.device_id }}</div>
+    </div>
+    {{# } else { }}
+    <span style="color: #999;">设备ID: {{ d.device_id }}</span>
+    {{# } }}
+</script>
+
+<!-- 开始时间模板 -->
+<script type="text/html" id="StartTimeTpl">
+    {{# if(d.start_time) { }}
+    <div>
+        <div>{{ layui.util.toDateString(d.start_time * 1000, 'yyyy-MM-dd HH:mm:ss') }}</div>
+        <div style="font-size: 12px; color: #999;">{{ layui.util.toDateString(d.start_time * 1000, 'MM-dd HH:mm') }}</div>
+    </div>
+    {{# } else { }}
+    -
+    {{# } }}
+</script>
+
+<!-- 结束时间模板 -->
+<script type="text/html" id="EndTimeTpl">
+    {{# if(d.end_time) { }}
+    <div>
+        <div>{{ layui.util.toDateString(d.end_time * 1000, 'yyyy-MM-dd HH:mm:ss') }}</div>
+        <div style="font-size: 12px; color: #999;">{{ layui.util.toDateString(d.end_time * 1000, 'MM-dd HH:mm') }}</div>
+    </div>
+    {{# } else { }}
+    <span style="color: #f56c6c;">在线中</span>
+    {{# } }}
+</script>
+
+<!-- 持续时长模板 -->
+<script type="text/html" id="DurationTpl">
+    {{# if(d.duration) { }}
+    {{# var hours = Math.floor(d.duration / 3600); }}
+    {{# var minutes = Math.floor((d.duration % 3600) / 60); }}
+    {{# var seconds = d.duration % 60; }}
+    {{# if(hours > 0) { }}
+    <span class="layui-badge layui-bg-blue">{{ hours }}h{{ minutes }}m</span>
+    {{# } else if(minutes > 0) { }}
+    <span class="layui-badge layui-bg-green">{{ minutes }}m{{ seconds }}s</span>
+    {{# } else { }}
+    <span class="layui-badge layui-bg-orange">{{ seconds }}s</span>
+    {{# } }}
+    {{# } else { }}
+    <span style="color: #f56c6c;">计算中</span>
+    {{# } }}
+</script>
+
+<!-- 状态模板 -->
+<script type="text/html" id="StatusTpl">
+    {{# if(d.status == 1) { }}
+    <span class="layui-badge layui-bg-green">在线中</span>
+    {{# } else { }}
+    <span class="layui-badge layui-bg-gray">已离线</span>
+    {{# } }}
+</script>
+
+<!-- 创建时间模板 -->
+<script type="text/html" id="CreateTimeTpl">
+    {{# if(d.create_time) { }}
+    <div>
+        <div>{{ layui.util.toDateString(d.create_time * 1000, 'yyyy-MM-dd HH:mm:ss') }}</div>
+        <div style="font-size: 12px; color: #999;">{{ layui.util.toDateString(d.create_time * 1000, 'MM-dd HH:mm') }}</div>
+    </div>
+    {{# } else { }}
+    -
+    {{# } }}
+</script>
+
+<!-- 数据操作工具条模板 -->
+<script type="text/html" id="toolbar">
+    <!--{if auth("remove")}-->
+    <a class="layui-btn layui-btn-danger layui-btn-sm" data-confirm="确定要删除这条记录吗?" data-action="{:url('remove')}" data-value="id#{{d.id}}">删 除</a>
+    <!--{/if}-->
+</script>
+{/block}
