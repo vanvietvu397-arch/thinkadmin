@@ -16,7 +16,7 @@
         <div class="layui-col-sm6 layui-col-md3">
             <div class="portal-block-item nowrap" style="background:linear-gradient(-125deg,#57bdbf,#2f9de2)">
                 <div>设备总量</div>
-                <div>8</div>
+                <div>{$deviceTotal|default=0}</div>
                 <div>当前设备总数量</div>
             </div>
             <i class="portal-block-icon layui-icon layui-icon-app"></i>
@@ -24,7 +24,7 @@
         <div class="layui-col-sm6 layui-col-md3">
             <div class="portal-block-item nowrap" style="background:linear-gradient(-125deg,#ff7d7d,#fb2c95)">
                 <div>在线总量</div>
-                <div>6</div>
+                <div>{$onlineTotal|default=0}</div>
                 <div>当前在线总数量</div>
             </div>
             <i class="portal-block-icon layui-icon layui-icon-user"></i>
@@ -32,7 +32,7 @@
         <div class="layui-col-sm6 layui-col-md3">
             <div class="portal-block-item nowrap" style="background:linear-gradient(-113deg,#c543d8,#925cc3)">
                 <div>模板总量</div>
-                <div>54</div>
+                <div>{$templateTotal|default=0}</div>
                 <div>当前模板总数量</div>
             </div>
             <i class="portal-block-icon layui-icon layui-icon-form"></i>
@@ -40,7 +40,7 @@
         <div class="layui-col-sm6 layui-col-md3">
             <div class="portal-block-item nowrap" style="background:linear-gradient(-141deg,#ecca1b,#f39526)">
                 <div>语音匹配</div>
-                <div>12</div>
+                <div>{$keywordTotal|default=0}</div>
                 <div>语音匹配总数量</div>
             </div>
             <i class="portal-block-icon layui-icon layui-icon-rmb"></i>
@@ -59,7 +59,6 @@
 
 <label class="layui-hide">
     <textarea id="jsondata1">{$days|json_encode}</textarea>
-    <textarea id="jsondata2">{$levels|json_encode}</textarea>
 </label>
 
 <script>
@@ -71,37 +70,17 @@
             data1 = JSON.parse($('#jsondata1').html());
             if (data1 && data1.length > 0) {
                 days = data1.map(function (item) {
-            return item['当天日期'];
-        });
+                    return item['当天日期'];
+                });
                 console.log('使用后端数据');
             } else {
                 throw new Error('后端数据为空');
             }
         } catch (e) {
-            console.warn('后端数据解析失败，使用模拟数据:', e.message);
+            console.error('后端数据解析失败:', e.message);
             data1 = [];
             days = [];
         }
-        
-        // 强制使用模拟数据进行测试
-        console.log('强制生成模拟数据');
-        data1 = [];
-        days = [];
-        for (let i = 9; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            const dateStr = date.toISOString().split('T')[0];
-            days.push(dateStr);
-            data1.push({
-                '当天日期': dateStr,
-                '剩余余额': Math.floor(Math.random() * 50) + 20, // 20-70台设备
-                '在线设备数': Math.floor(Math.random() * 50) + 20
-            });
-        }
-        
-        // 调试：查看数据结构
-        console.log('数据样本:', data1[0]);
-        console.log('可用字段:', Object.keys(data1[0] || {}));
 
 
 
@@ -120,7 +99,7 @@
             
             const option = {
                 grid: [{left: '10%', right: '3%', top: '25%'}],
-                title: [{left: 'center', text: '近十天设备在线趋势'}],
+                title: [{left: 'center', text: '近十六天设备在线趋势'}],
                 tooltip: {trigger: 'axis'},
                 xAxis: [{data: days, gridIndex: 0}],
                 yAxis: [{type: 'value', splitLine: {show: true}, gridIndex: 0, axisLabel: {formatter: '{value} 台'}}],
@@ -131,7 +110,7 @@
                         areaStyle: {color: 'rgba(180, 180, 180, 0.5)'},
                         label: {formatter: '{c} 台', showSymbol: false, show: true},
                         data: data1.map(function (item) {
-                            return item['剩余余额'] || item['在线设备数'] || 0;
+                            return item['在线设备数'] || 0;
                         }),
                         markLine: {
                             data: [[

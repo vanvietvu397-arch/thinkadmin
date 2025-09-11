@@ -6,6 +6,7 @@ use GatewayWorker\Lib\Gateway;
 use think\facade\Db;
 use think\facade\Log;
 use app\common\model\DeviceModel;
+use app\common\model\DeviceOnlineRecordModel;
 
 /**
  * 设备WebSocket连接管理器
@@ -313,10 +314,22 @@ class DeviceWebSocketManager
             
             if ($status === 'connected') {
                 $updateData['xiaozhi_last_connect_time'] = time();
+                
+                // 添加设备在线记录 - 开始在线
+                $ipAddress = self::getClientIpAddress($clientId);
+                DeviceOnlineRecordModel::startOnlineRecord($deviceId, $ipAddress);
+                
+                Log::info("设备开始在线记录 - 设备ID：{$deviceId}，IP：{$ipAddress}");
+                
             } else {
                 $updateData['xiaozhi_last_disconnect_time'] = time();
+                
+                // 添加设备在线记录 - 结束在线
+                DeviceOnlineRecordModel::endOnlineRecord($deviceId);
+                
+                Log::info("设备结束在线记录 - 设备ID：{$deviceId}");
             }
-
+            
             DeviceModel::where('id', $deviceId)->update($updateData);
 
         } catch (\Exception $e) {
@@ -444,6 +457,23 @@ class DeviceWebSocketManager
         } catch (\Exception $e) {
             Log::error("推送离线消息失败：" . $e->getMessage());
         }
+    }
+
+    /**
+     * 获取客户端IP地址
+     */
+    private static function getClientIpAddress(?string $clientId): string
+    {
+        try {
+            if ($clientId && Gateway::isOnline($clientId)) {
+                $session = Gateway::getSession($clientId);
+                return $session['remote_ip'] ?? '';
+            }
+        } catch (\Exception $e) {
+            Log::warning("获取客户端IP地址失败：" . $e->getMessage());
+        }
+        
+        return '';
     }
 }
 
