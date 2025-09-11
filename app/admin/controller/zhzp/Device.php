@@ -130,10 +130,12 @@ class Device extends Controller
             if (!empty($data['id'])) {
                 $where[] = ['id', '<>', $data['id']];
             }
-            if (DeviceModel::where($where)->find()) {
-                $this->error('设备编号已存在');
+            if (empty($data['id'])){
+                if (DeviceModel::where($where)->find()) {
+                    $this->error('设备编号已存在');
+                }
             }
-            
+
             // 处理小智AI配置
             if (isset($data['enable_xiaozhi']) && $data['enable_xiaozhi']) {
                 if (empty($data['xiaozhi_mcp_url'])) {
